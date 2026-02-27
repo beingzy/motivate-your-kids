@@ -15,10 +15,18 @@ export default function KidDashboard({ params }: { params: Promise<{ id: string 
 
   const balance = getBalance(id)
   const kidBadgeRecords = getKidBadges(id)
-  const recentTxs = getTransactions(id).slice(0, 5)
+  const allTxs = getTransactions(id)
+  const recentTxs = allTxs.slice(0, 10)
+
+  function getCategoryIcon(actionId?: string): string {
+    if (!actionId) return '⭐'
+    const action = store.actions.find(a => a.id === actionId)
+    if (!action) return '⭐'
+    return store.categories.find(c => c.id === action.categoryId)?.icon ?? '⭐'
+  }
 
   return (
-    <main className="p-5 max-w-sm mx-auto">
+    <main className="p-5 max-w-sm mx-auto pb-24">
       {/* Header */}
       <header className="flex items-center justify-between pt-6 mb-8">
         <div className="flex items-center gap-3">
@@ -48,16 +56,17 @@ export default function KidDashboard({ params }: { params: Promise<{ id: string 
               onClick={() => router.push(`/kids/${id}/badges`)}
               className="text-sm text-amber-500 underline"
             >
-              See all
+              See all ({kidBadgeRecords.length})
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {kidBadgeRecords.slice(0, 6).map(kb => {
+            {kidBadgeRecords.slice(0, 8).map(kb => {
               const badge = store.badges.find(b => b.id === kb.badgeId)
               return badge ? (
-                <span key={kb.badgeId} className="text-3xl" title={badge.name}>
-                  {badge.icon}
-                </span>
+                <div key={kb.badgeId} className="bg-white rounded-2xl px-3 py-2 shadow-sm text-center flex flex-col items-center gap-0.5">
+                  <span className="text-2xl">{badge.icon}</span>
+                  <span className="text-[10px] text-amber-600 font-medium leading-tight max-w-[52px] truncate">{badge.name}</span>
+                </div>
               ) : null
             })}
           </div>
@@ -65,34 +74,48 @@ export default function KidDashboard({ params }: { params: Promise<{ id: string 
       )}
 
       {/* Recent activity */}
-      {recentTxs.length > 0 && (
-        <div>
-          <p className="font-bold text-amber-800 mb-2">Recent</p>
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <p className="font-bold text-amber-800">Recent</p>
+          {allTxs.length > 10 && (
+            <button
+              onClick={() => router.push(`/kids/${id}/history`)}
+              className="text-sm text-amber-500 underline"
+            >
+              See all ({allTxs.length})
+            </button>
+          )}
+        </div>
+        {recentTxs.length === 0 ? (
+          <div className="text-center py-8 text-amber-400 text-sm">
+            No activity yet — ask a parent to log your first action!
+          </div>
+        ) : (
           <div className="flex flex-col gap-2">
             {recentTxs.map(tx => {
               const action = tx.actionId ? store.actions.find(a => a.id === tx.actionId) : null
               const reward = tx.rewardId ? store.rewards.find(r => r.id === tx.rewardId) : null
               const isEarn = tx.type === 'earn'
+              const icon = isEarn ? getCategoryIcon(tx.actionId) : '🎁'
+              const label = action?.name ?? reward?.name ?? tx.note ?? (isEarn ? 'Bonus stars' : 'Reward')
               return (
                 <div key={tx.id} className="bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm">
-                  <span className="text-xl">{isEarn ? '⭐' : '🎁'}</span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-amber-900">
-                      {action?.name ?? reward?.name ?? tx.note ?? 'Bonus'}
-                    </p>
+                  <span className="text-xl">{icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-amber-900 truncate">{label}</p>
                     <p className="text-xs text-amber-400">
                       {new Date(tx.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </p>
                   </div>
-                  <span className={`font-bold text-sm ${isEarn ? 'text-green-500' : 'text-amber-400'}`}>
+                  <span className={`font-bold text-sm flex-shrink-0 ${isEarn ? 'text-green-500' : 'text-amber-400'}`}>
                     {isEarn ? '+' : '-'}{tx.amount}⭐
                   </span>
                 </div>
               )
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </main>
   )
 }

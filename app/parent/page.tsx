@@ -8,20 +8,35 @@ import type { Kid } from '@/types'
 const AVATARS = ['🐻', '🐼', '🦊', '🐸', '🦁', '🐯', '🐨', '🐹', '🐰', '🦋']
 const COLORS = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316']
 const EMPTY = { name: '', avatar: AVATARS[0], colorAccent: COLORS[0] }
+const TIPS_KEY = 'myk_tips_dismissed'
 
 export default function ParentDashboard() {
   const router = useRouter()
-  const { store, hydrated, getBalance, addKid, updateKid, removeKid } = useFamily()
+  const { store, hydrated, getBalance, getKidBadges, addKid, updateKid, removeKid } = useFamily()
 
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Kid | null>(null)
   const [draft, setDraft] = useState(EMPTY)
+  const [tipsDismissed, setTipsDismissed] = useState(true) // optimistic: hidden until hydrated
 
   useEffect(() => {
     if (hydrated && !store.family) router.replace('/')
   }, [hydrated, store.family, router])
 
+  // Show tips banner on first visit after setup (only when family + kids exist but no actions logged yet)
+  useEffect(() => {
+    if (!hydrated) return
+    const dismissed = localStorage.getItem(TIPS_KEY)
+    const hasActivity = store.transactions.length > 0
+    setTipsDismissed(!!dismissed || hasActivity)
+  }, [hydrated, store.transactions.length])
+
   if (!hydrated || !store.family) return null
+
+  function dismissTips() {
+    localStorage.setItem(TIPS_KEY, '1')
+    setTipsDismissed(true)
+  }
 
   function openNew() {
     setEditing(null)
@@ -47,7 +62,7 @@ export default function ParentDashboard() {
 
   return (
     <main className="p-5 max-w-lg mx-auto">
-      <header className="flex items-center justify-between mb-6 pt-4">
+      <header className="flex items-center justify-between mb-5 pt-4">
         <div>
           <p className="text-sm text-amber-600 font-medium">Welcome back 👋</p>
           <h1 className="text-2xl font-bold text-amber-900">{store.family.name}</h1>
@@ -59,6 +74,34 @@ export default function ParentDashboard() {
           Switch
         </button>
       </header>
+
+      {/* First-launch tips banner */}
+      {!tipsDismissed && store.kids.length > 0 && (
+        <div className="bg-white border border-amber-200 rounded-2xl p-4 mb-5 relative">
+          <button onClick={dismissTips} className="absolute top-3 right-3 text-amber-300 hover:text-amber-500 text-lg leading-none">×</button>
+          <p className="font-bold text-amber-900 text-sm mb-3">🚀 Getting started</p>
+          <ol className="flex flex-col gap-2 text-sm text-amber-700">
+            <li className="flex items-start gap-2">
+              <span className="font-bold text-amber-500 flex-shrink-0">1.</span>
+              <span>Tap a kid&apos;s name below to open their profile</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="font-bold text-amber-500 flex-shrink-0">2.</span>
+              <span>Tap an action to log it and award stars ⭐</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="font-bold text-amber-500 flex-shrink-0">3.</span>
+              <span>When they earn enough, tap <strong>Redeem a reward</strong> on their profile</span>
+            </li>
+          </ol>
+          <button
+            onClick={dismissTips}
+            className="mt-3 text-xs text-amber-400 underline"
+          >
+            Got it, hide this
+          </button>
+        </div>
+      )}
 
       {store.kids.length === 0 ? (
         <div className="text-center py-20">
@@ -76,10 +119,11 @@ export default function ParentDashboard() {
         <div className="flex flex-col gap-3">
           {store.kids.map(kid => {
             const balance = getBalance(kid.id)
+            const badges = getKidBadges(kid.id)
             return (
               <div
                 key={kid.id}
-                className="bg-white rounded-2xl shadow-sm border-l-4 flex items-center gap-4 overflow-hidden"
+                className="bg-white rounded-2xl shadow-sm border-l-4 flex items-center overflow-hidden"
                 style={{ borderColor: kid.colorAccent }}
               >
                 <button
@@ -87,11 +131,16 @@ export default function ParentDashboard() {
                   className="flex-1 flex items-center gap-4 p-4 text-left hover:bg-amber-50 transition-colors"
                 >
                   <span className="text-4xl">{kid.avatar}</span>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="font-bold text-amber-900 text-lg">{kid.name}</p>
-                    <p className="text-amber-500 text-sm">⭐ {balance} star{balance !== 1 ? 's' : ''}</p>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      <span className="text-amber-500 text-sm">⭐ {balance}</span>
+                      {badges.length > 0 && (
+                        <span className="text-amber-400 text-xs">🏅 {badges.length}</span>
+                      )}
+                    </div>
                   </div>
-                  <span className="ml-auto text-amber-300 text-lg">›</span>
+                  <span className="text-amber-300 text-lg">›</span>
                 </button>
                 <div className="flex items-center gap-1 pr-3">
                   <button
@@ -112,7 +161,6 @@ export default function ParentDashboard() {
               </div>
             )
           })}
-          {/* Add kid — secondary action, folded below the list */}
           <button
             onClick={openNew}
             className="w-full py-3 rounded-2xl border-2 border-dashed border-amber-200 text-amber-400 hover:border-amber-400 hover:text-amber-600 transition-colors text-sm font-medium"

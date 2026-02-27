@@ -144,7 +144,10 @@ export default function RewardsPage() {
               className="rounded-xl border-2 border-amber-200 px-3 py-2 text-amber-900 outline-none focus:border-amber-400"
             />
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-amber-700">Cost: {draft.pointsCost} ⭐</label>
+              <div className="flex items-baseline justify-between">
+                <label className="text-sm font-medium text-amber-700">Cost: {draft.pointsCost} ⭐</label>
+                <span className="text-xs text-amber-400">Tip: small treats 10–30, big rewards 50–100+</span>
+              </div>
               <div className="flex gap-2 flex-wrap">
                 {COST_PRESETS.map(v => (
                   <button

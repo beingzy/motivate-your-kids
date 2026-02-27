@@ -117,7 +117,14 @@ export default function ActionsPage() {
       {active.length === 0 && !showForm && (
         <div className="text-center py-10">
           <div className="text-5xl mb-3">✅</div>
-          <p className="text-amber-700">No actions yet. Add one!</p>
+          <p className="text-amber-700 mb-1">No actions yet.</p>
+          <p className="text-amber-500 text-sm mb-4">Actions are things kids can do to earn stars — chores, reading, being kind, etc.</p>
+          <button
+            onClick={openNew}
+            className="px-5 py-2 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors text-sm"
+          >
+            Create your first action
+          </button>
         </div>
       )}
 
@@ -203,7 +210,10 @@ export default function ActionsPage() {
               ))}
             </select>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-amber-700">Stars: {draft.pointsValue} ⭐</label>
+              <div className="flex items-baseline justify-between">
+                <label className="text-sm font-medium text-amber-700">Stars: {draft.pointsValue} ⭐</label>
+                <span className="text-xs text-amber-400">Tip: daily tasks 1–10, achievements 25–100</span>
+              </div>
               <div className="flex gap-2 flex-wrap">
                 {POINT_PRESETS.map(v => (
                   <button
