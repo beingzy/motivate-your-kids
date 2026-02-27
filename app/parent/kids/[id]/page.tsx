@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useFamily } from '@/context/FamilyContext'
 import type { Transaction } from '@/types'
@@ -20,8 +20,8 @@ function formatTimestamp(ts: string): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ` ${timeStr}`
 }
 
-export default function ParentKidPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export default function ParentKidPage({ params }: { params: { id: string } }) {
+  const { id } = params
   const router = useRouter()
   const { store, hydrated, getBalance, logCompletion, awardBonus, redeemReward, getTransactions } = useFamily()
 

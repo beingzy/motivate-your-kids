@@ -1,6 +1,6 @@
 'use client'
 
-import { use } from 'react'
+import React from 'react'
 import { useFamily } from '@/context/FamilyContext'
 import { KidNav } from '@/components/KidNav'
 
@@ -9,9 +9,9 @@ export default function KidLayout({
   params,
 }: {
   children: React.ReactNode
-  params: Promise<{ id: string }>
+  params: { id: string }
 }) {
-  const { id } = use(params)
+  const { id } = params
   const { store } = useFamily()
   const kid = store.kids.find(k => k.id === id)
 

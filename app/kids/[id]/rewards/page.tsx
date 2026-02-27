@@ -1,11 +1,11 @@
 'use client'
 
-import { use, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useFamily } from '@/context/FamilyContext'
 
-export default function KidRewardsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export default function KidRewardsPage({ params }: { params: { id: string } }) {
+  const { id } = params
   const router = useRouter()
   const { store, hydrated, getBalance } = useFamily()
 
