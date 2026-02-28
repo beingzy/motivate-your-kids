@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Nunito } from 'next/font/google'
 import './globals.css'
 import { FamilyProvider } from '@/context/FamilyContext'
+import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration'
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -36,6 +37,7 @@ export default function RootLayout({
     <html lang="en" className={nunito.variable}>
       <body className="antialiased bg-amber-50 min-h-screen">
         <FamilyProvider>{children}</FamilyProvider>
+        <ServiceWorkerRegistration />
       </body>
     </html>
   )
