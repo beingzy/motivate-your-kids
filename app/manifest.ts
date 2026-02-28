@@ -3,9 +3,10 @@ import type { MetadataRoute } from 'next'
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Kids Rewards',
-    short_name: 'KidsRewards',
+    short_name: 'Kid Stars',
     description: 'Motivate your kids with points and badges',
     start_url: '/',
+    scope: '/',
     display: 'standalone',
     background_color: '#fffbeb',
     theme_color: '#f59e0b',

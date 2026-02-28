@@ -40,13 +40,13 @@ self.addEventListener('fetch', e => {
   // Navigation requests — network-first, fall back to cached shell
   if (request.mode === 'navigate') {
     e.respondWith(
-      fetch(request).catch(() => caches.match('/') ?? Response.error()),
+      fetch(request).catch(() => caches.match('/').then(r => r ?? Response.error())),
     )
     return
   }
 
   // Everything else — network-first
   e.respondWith(
-    fetch(request).catch(() => caches.match(request)),
+    fetch(request).catch(() => caches.match(request).then(r => r ?? Response.error())),
   )
 })
