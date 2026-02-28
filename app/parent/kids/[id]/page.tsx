@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useFamily } from '@/context/FamilyContext'
 import type { Transaction } from '@/types'
+import { fireStarConfetti } from '@/lib/confetti'
 
 function formatTimestamp(ts: string): string {
   const d = new Date(ts)
@@ -48,8 +49,14 @@ export default function ParentKidPage({ params }: { params: { id: string } }) {
   }
 
   function handleLogAction(actionId: string, actionName: string) {
+    const action = store.actions.find(a => a.id === actionId)
     logCompletion(id, actionId)
-    showFlash(`+stars! ${actionName}`)
+    if (action?.isDeduction) {
+      showFlash(`−${action.pointsValue}⭐ ${actionName}`)
+    } else {
+      showFlash(`+${action?.pointsValue ?? ''}⭐ ${actionName}`)
+      fireStarConfetti()
+    }
   }
 
   function handleAwardBonus() {
@@ -59,6 +66,7 @@ export default function ParentKidPage({ params }: { params: { id: string } }) {
     setBonusNote('')
     setBonusAmount(5)
     showFlash(`Awarded ${bonusAmount} bonus stars!`)
+    fireStarConfetti()
   }
 
   function handleRedeemConfirm(rewardId: string) {
@@ -96,7 +104,7 @@ export default function ParentKidPage({ params }: { params: { id: string } }) {
   return (
     <main className="p-5 max-w-lg mx-auto pb-28">
       {flash && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-white font-bold rounded-2xl px-5 py-3 shadow-lg text-sm whitespace-nowrap">
+        <div className="fixed top-6 left-1/2 z-50 bg-amber-500 text-white font-bold rounded-2xl px-5 py-3 shadow-lg text-sm whitespace-nowrap animate-slide-down">
           {flash}
         </div>
       )}

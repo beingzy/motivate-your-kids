@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useFamily } from '@/context/FamilyContext'
 import type { Action } from '@/types'
+import { fireStarConfetti } from '@/lib/confetti'
 
 const POINT_PRESETS = [1, 3, 5, 10, 25, 50, 100]
 
@@ -99,6 +100,7 @@ export default function ActionsPage() {
     const verb = logAction.isDeduction ? '−' : '+'
     setFlash(`${verb}${logAmount}⭐ logged for ${kidName}!`)
     setTimeout(() => setFlash(null), 2500)
+    if (!logAction.isDeduction) fireStarConfetti()
     setLogAction(null)
     setLogKidId(null)
   }
@@ -115,7 +117,7 @@ export default function ActionsPage() {
   return (
     <main className="p-5 max-w-lg mx-auto">
       {flash && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-white font-bold rounded-2xl px-5 py-3 shadow-lg text-sm whitespace-nowrap">
+        <div className="fixed top-6 left-1/2 z-50 bg-amber-500 text-white font-bold rounded-2xl px-5 py-3 shadow-lg text-sm whitespace-nowrap animate-slide-down">
           {flash}
         </div>
       )}

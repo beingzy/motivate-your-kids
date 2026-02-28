@@ -41,7 +41,7 @@ export default function KidDashboard({ params }: { params: { id: string } }) {
       {/* Points balance */}
       <div className="bg-white rounded-3xl shadow-sm p-8 text-center mb-6" style={{ borderTop: `4px solid ${kid.colorAccent}` }}>
         <p className="text-amber-500 font-medium text-sm mb-2">My Stars</p>
-        <div className="flex items-center justify-center gap-2">
+        <div key={balance} className="flex items-center justify-center gap-2 animate-star-pop">
           <span className="text-6xl font-black text-amber-900">{balance}</span>
           <span className="text-5xl">⭐</span>
         </div>
