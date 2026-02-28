@@ -1,8 +1,11 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useFamily } from '@/context/FamilyContext'
+import { GettingStarted } from '@/components/GettingStarted'
+import { loadMeta, saveMeta } from '@/lib/meta'
+import { APP_VERSION } from '@/lib/version'
 import type { Transaction } from '@/types'
 
 function timeLabel(ts: string): string {
@@ -38,10 +41,28 @@ function groupByDate(txs: Transaction[]): { label: string; txs: Transaction[] }[
 export default function ParentDashboard() {
   const router = useRouter()
   const { store, hydrated, getBalance } = useFamily()
+  const [showGuide, setShowGuide] = useState(false)
 
   useEffect(() => {
     if (hydrated && !store.family) router.replace('/')
   }, [hydrated, store.family, router])
+
+  // Version-gated guide: show on first visit or when a new version is deployed
+  useEffect(() => {
+    if (!hydrated || !store.family) return
+    const meta = loadMeta()
+    if (meta.lastSeenVersion !== APP_VERSION) {
+      saveMeta({ lastSeenVersion: APP_VERSION, guideDismissed: false })
+      setShowGuide(true)
+    } else {
+      setShowGuide(!meta.guideDismissed)
+    }
+  }, [hydrated, store.family])
+
+  const handleDismissGuide = useCallback(() => {
+    saveMeta({ guideDismissed: true })
+    setShowGuide(false)
+  }, [])
 
   const allTxs = useMemo(
     () => [...store.transactions].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
@@ -115,6 +136,13 @@ export default function ParentDashboard() {
               )
             })}
           </div>
+
+          {/* ── Getting started guide ── */}
+          {showGuide && (
+            <div className="px-4">
+              <GettingStarted store={store} onDismiss={handleDismissGuide} />
+            </div>
+          )}
 
           {/* ── Activity feed ── */}
           <div className="px-4 pb-6">
