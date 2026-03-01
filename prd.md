@@ -411,6 +411,143 @@ Each feature is built and manually verified before the next begins.
 
 ---
 
+---
+
+### Round 3 — Focus Group Feedback (Mar 2026)
+
+Feedback collected from a parent focus group (primary users: mothers of children aged 4–8).
+Original feedback in Chinese; interpreted and prioritised below.
+
+---
+
+#### FB-1 · Transaction Undo / Delete  *(High priority)*
+
+> "If you accidentally add the wrong stars, you should be able to immediately swipe to delete or undo, instead of having to select a deduction to offset it."
+
+**Problem:** Mistakes happen in real-time, often with a child watching. The current workaround — creating a deduction transaction — is confusing, leaves a messy history, and adds friction at an emotionally charged moment.
+
+**Requirements:**
+- Each transaction in the activity feed shows a delete/undo affordance (e.g., swipe-to-dismiss or a trash icon).
+- Undo window: 60 seconds after logging, a prominent toast appears: "⭐ +5 logged — Undo". After 60 s the option disappears.
+- Hard delete (swipe or tap trash on history view) is available for any transaction regardless of age, with a single confirmation tap.
+- Deleting a `redeem` transaction refunds the stars to the kid's balance.
+- Deleting a `deduct` transaction restores the stars.
+
+---
+
+#### FB-2 · Chinese (Simplified) Localisation  *(Medium priority)*
+
+> "Is there a Chinese version?"
+
+**Requirements:**
+- All visible UI strings are extracted into a locale file (`en.ts` / `zh-CN.ts`).
+- Language is set once in family settings; stored in `AppMeta` (not `AppStore` so it survives data resets).
+- Default language: auto-detect from `navigator.language`; fallback to English.
+- In-scope for v1.x: all parent-facing strings and the kid dashboard. Onboarding wizard included.
+- Out-of-scope: RTL layouts (no RTL languages planned).
+
+**Implementation note:** Use a lightweight custom i18n hook (`useT()`) that reads from a locale dictionary; avoid heavy libraries like `next-intl` for v1.x.
+
+---
+
+#### FB-3 · Action Form — Remove Mandatory Category  *(High priority)*
+
+> "The action creation form shouldn't block submission until a category is selected — it feels coercive. When moms are adding or deducting stars they may be in an emotional state; if the app is hard to use it gets deleted immediately."
+
+**Problem:** The current form requires a category before the action can be saved. Category is a secondary organisational concern; the action name and point value are what actually matter.
+
+**Requirements:**
+- Category becomes **optional** on the action form. An action can be saved with name + points alone.
+- If category is omitted, actions are grouped under an implicit "Uncategorised" bucket in list views.
+- The category picker is visually de-emphasised (smaller, below the main fields) rather than appearing as a blocking gate.
+- The existing preset chips for point values (1, 3, 5, 10 …) remain, but the **custom number input is always visible and editable** — it is the canonical field. Chips are shortcuts that pre-fill the input.
+- Autocomplete on the name field must not suppress the first character typed (if it does, disable autocomplete on that input).
+
+---
+
+#### FB-4 · Weekly / Monthly Analytics Report  *(Medium priority)*
+
+> "It would be great to have a weekly and monthly summary table showing overall performance, with daily and monthly total star data."
+
+**Requirements:**
+- New route: `/parent/report` (accessible from the More tab as "📊 Reports").
+- Two views selectable via a toggle: **This Week** / **This Month**.
+- **This Week view:**
+  - Bar chart or table with one row/column per day (Mon–Sun); each cell shows net stars earned that day.
+  - Summary row: total stars earned, total deducted, net change, rewards redeemed.
+- **This Month view:**
+  - Same layout but one row per week of the month.
+  - Per-day detail is accessible by tapping a week row (expand inline).
+- Per-kid filter: defaults to "All kids"; a chip row above the table lets parents filter to one kid.
+- No external charting library in v1.x — render as a simple HTML table with inline bar visualisation using `div` widths (consistent with existing no-dep approach).
+- Data is computed entirely from `store.transactions` — no new data model fields needed.
+
+---
+
+#### FB-5 · Quick-Action Home Page  *(High priority)*
+
+> "The first page should have simple, prominent buttons to add or deduct stars. Tapping one pops up a modal to optionally enter a reason. If you don't want a reason, you can add/deduct directly."
+
+**Problem:** The current home tab is an activity feed / overview. Parents who open the app specifically to log something have to navigate to Actions or a kid's profile first. In emotional moments this extra tap causes drop-off.
+
+**Requirements:**
+- The **first tab** (Home) becomes a **Quick Log** surface, not an overview feed.
+- Layout:
+  1. Kid selector row at the top (compact horizontal chips — same as current balance chips).
+  2. Two large prominent buttons: **"+ Add Stars"** (amber/green) and **"− Deduct Stars"** (red/rose).
+  3. Tapping either opens a bottom sheet with: amount selector (default 5), optional reason text field ("What happened?"), and a confirm button. Reason is never mandatory.
+  4. Below the quick-log buttons: the existing date-grouped activity feed (keep for context).
+- The existing Getting Started guide card stays between the kid chips and the quick buttons when active.
+- The overview dashboard behaviour moves to a secondary view (e.g., a "Summary" entry in More tab or a scrollable section below the feed).
+
+---
+
+#### FB-6 · Motivational Micro-copy on Star Events  *(Medium priority)*
+
+> "When adding stars the confetti is great. When deducting stars it could say something like 'Stand your ground, better next time' to comfort and encourage moms."
+
+**Requirements:**
+- **On earn/add:** keep existing confetti burst. Optionally append a short random encouragement to the flash toast (e.g., "Keep it up! 🌟", "You're doing great! ⭐").
+- **On deduct:** replace the plain flash toast with a warmer message. Pick randomly from a set of short, validating phrases shown in the toast, e.g.:
+  - "坚持立场，下次更好 💪" / "Stand your ground — better next time 💪"
+  - "Setting boundaries is love ❤️"
+  - "Consistency is key 🔑"
+  - "You've got this, keep going 🌈"
+- Phrases stored in a locale-keyed map (feeds into FB-2 Chinese localisation naturally).
+- No confetti on deduction — the visual language should feel firm but warm, not celebratory.
+
+---
+
+#### FB-7 · Action Form — Free-Form Input & First-Character Bug  *(High priority)*
+
+> "Adding a new action is awkward: you can't change the first letter, and you can only select from the numbers above."
+
+**Two distinct problems:**
+
+**a) First-character input bug:**
+- The action name input may have `autocomplete` or browser-native autofill interfering with the first keystroke.
+- Fix: add `autoComplete="off"` and `autoCorrect="off"` to the name `<input>`. Verify that `autoFocus` does not conflict with IME (input method editors) for Chinese keyboards.
+
+**b) Point value selector feels locked to presets:**
+- The chip row (1, 3, 5, 10, 25, 50, 100) reads as the only valid options.
+- Fix: ensure the custom `<input type="number">` below the chips is prominent (same visual weight as chips), always editable, and clearly labelled "or enter any value". The chips simply prefill it as shortcuts.
+
+---
+
+#### Priority Matrix (Round 3)
+
+| ID | Feature | Priority | Effort | Target |
+|----|---------|----------|--------|--------|
+| FB-1 | Transaction undo / delete | High | M | v1.1 |
+| FB-3 | Remove mandatory category | High | S | v1.1 |
+| FB-5 | Quick-action home page | High | M | v1.1 |
+| FB-7 | Action form input fixes | High | S | v1.1 |
+| FB-6 | Motivational micro-copy | Medium | S | v1.1 |
+| FB-4 | Weekly/monthly report | Medium | M | v1.2 |
+| FB-2 | Chinese localisation | Medium | L | v1.2 |
+
+---
+
 #### Observations for Future Iterations (v1.x / v2)
 
 - **Kid dashboard (/kids/[id]):** The recent activity feed only shows 5 entries and displays generic emoji (⭐/🎁). Enhance with category-specific icons and a "See all" link.
