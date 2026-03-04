@@ -18,33 +18,33 @@ export default function Home() {
   if (!store.family) return null
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center gap-8 p-6 bg-amber-50">
+    <main className="min-h-screen flex flex-col items-center justify-center gap-8 p-6">
       <div className="text-center">
         <div className="text-6xl mb-3">⭐</div>
-        <h1 className="text-3xl font-bold text-amber-900">{store.family.name}</h1>
-        <p className="text-amber-700 mt-1">Who&apos;s using the app?</p>
+        <h1 className="text-3xl font-bold text-ink-primary">{store.family.name}</h1>
+        <p className="text-ink-secondary mt-1">Who&apos;s using the app?</p>
       </div>
 
       <div className="flex flex-col gap-4 w-full max-w-xs">
         <button
           onClick={() => router.push('/parent')}
-          className="w-full py-4 px-6 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-lg shadow-md transition-colors"
+          className="w-full py-4 px-6 rounded-2xl bg-brand hover:bg-brand-hover text-white font-bold text-lg shadow-brand transition-colors"
         >
           👨‍👩‍👧 I&apos;m a Parent
         </button>
 
         {store.kids.length > 0 && (
           <>
-            <div className="text-center text-amber-600 font-medium text-sm">— or pick a kid —</div>
+            <div className="text-center text-ink-secondary font-medium text-sm">— or pick a kid —</div>
             {store.kids.map(kid => (
               <button
                 key={kid.id}
                 onClick={() => router.push(`/kids/${kid.id}`)}
-                className="w-full py-4 px-6 rounded-2xl bg-white hover:bg-amber-100 border-2 font-bold text-lg shadow-sm transition-colors flex items-center gap-3"
+                className="w-full py-4 px-6 rounded-2xl bg-white hover:bg-brand-light border-2 font-bold text-lg shadow-card transition-colors flex items-center gap-3"
                 style={{ borderColor: kid.colorAccent }}
               >
                 <span className="text-3xl">{kid.avatar}</span>
-                <span className="text-amber-900">{kid.name}</span>
+                <span className="text-ink-primary">{kid.name}</span>
               </button>
             ))}
           </>

@@ -28,7 +28,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#f59e0b',
+  themeColor: '#E8612D',
 }
 
 export default function RootLayout({
@@ -36,7 +36,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={nunito.variable}>
-      <body className="antialiased bg-amber-50 min-h-screen">
+      <body className="antialiased min-h-screen">
         <LocaleProvider>
           <FamilyProvider>{children}</FamilyProvider>
         </LocaleProvider>

@@ -26,27 +26,27 @@
 
 @layer base {
   :root {
-    /* shadcn/ui tokens — mapped to warm amber palette */
-    --background: 43 100% 97%;        /* amber-50 */
-    --foreground: 30 50% 15%;         /* deep amber-brown */
+    /* shadcn/ui tokens — mapped to design system palette */
+    --background: 30 43% 97%;         /* ~page #F8F5F2 */
+    --foreground: 215 28% 17%;        /* ink.primary #1E293B */
     --card: 0 0% 100%;
-    --card-foreground: 30 50% 15%;
+    --card-foreground: 215 28% 17%;
     --popover: 0 0% 100%;
-    --popover-foreground: 30 50% 15%;
-    --primary: 38 92% 50%;            /* amber-500 */
+    --popover-foreground: 215 28% 17%;
+    --primary: 17 79% 54%;            /* brand #E8612D */
     --primary-foreground: 0 0% 100%;
-    --secondary: 43 96% 90%;          /* amber-100 */
-    --secondary-foreground: 30 50% 15%;
-    --muted: 43 96% 90%;
-    --muted-foreground: 30 30% 50%;
-    --accent: 43 96% 90%;
-    --accent-foreground: 30 50% 15%;
+    --secondary: 30 100% 97%;         /* brand.light #FFF4EF */
+    --secondary-foreground: 215 28% 17%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 215 16% 57%;  /* ink.secondary #64748B */
+    --accent: 30 100% 97%;
+    --accent-foreground: 215 28% 17%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 43 60% 88%;
-    --input: 43 60% 88%;
-    --ring: 38 92% 50%;
-    --radius: 1rem;                   /* rounder corners throughout */
+    --border: 220 13% 91%;            /* line #E5E7EB */
+    --input: 220 13% 91%;
+    --ring: 17 79% 54%;               /* brand */
+    --radius: 1rem;
   }
 
   * {
@@ -54,7 +54,10 @@
   }
 
   body {
-    @apply bg-amber-50 text-amber-950 antialiased;
+    @apply antialiased;
+    background: linear-gradient(180deg, #F0E4F4 0%, #FDF1EC 30%, #F8F5F2 60%, #F8F5F2 100%);
+    background-attachment: fixed;
+    color: #1E293B;
     font-family: var(--font-nunito), 'Nunito', system-ui, sans-serif;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior: none;

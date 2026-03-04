@@ -39,10 +39,10 @@ export default function KidsPage() {
   return (
     <main className="p-5 max-w-lg mx-auto">
       <header className="flex items-center justify-between mb-6 pt-4">
-        <h1 className="text-2xl font-bold text-amber-900">Kids</h1>
+        <h1 className="text-2xl font-bold text-ink-primary">Kids</h1>
         <button
           onClick={openNew}
-          className="px-4 py-2 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors text-sm"
+          className="px-4 py-2 rounded-xl bg-brand text-white font-bold hover:bg-brand-hover transition-colors text-sm"
         >
           + Add kid
         </button>
@@ -51,7 +51,7 @@ export default function KidsPage() {
       {store.kids.length === 0 && (
         <div className="text-center py-10">
           <div className="text-5xl mb-3">👦</div>
-          <p className="text-amber-700">No kids added yet.</p>
+          <p className="text-ink-secondary">No kids added yet.</p>
         </div>
       )}
 
@@ -59,16 +59,16 @@ export default function KidsPage() {
         {store.kids.map(kid => (
           <div
             key={kid.id}
-            className="bg-white rounded-2xl p-4 shadow-sm border-l-4 flex items-center gap-4"
+            className="bg-white rounded-2xl p-4 shadow-card border-l-4 flex items-center gap-4"
             style={{ borderColor: kid.colorAccent }}
           >
             <span className="text-4xl">{kid.avatar}</span>
             <div className="flex-1">
-              <p className="font-bold text-amber-900">{kid.name}</p>
-              <p className="text-amber-500 text-sm">⭐ {getBalance(kid.id)} stars</p>
+              <p className="font-bold text-ink-primary">{kid.name}</p>
+              <p className="text-brand text-sm">⭐ {getBalance(kid.id)} stars</p>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => openEdit(kid)} className="text-amber-400 hover:text-amber-600 text-sm">Edit</button>
+              <button onClick={() => openEdit(kid)} className="text-ink-muted hover:text-ink-secondary text-sm">Edit</button>
               <button
                 onClick={() => {
                   if (confirm(`Remove ${kid.name}? Their history will remain.`)) removeKid(kid.id)
@@ -85,23 +85,23 @@ export default function KidsPage() {
       {showForm && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-end" onClick={() => setShowForm(false)}>
           <div className="bg-white w-full rounded-t-3xl p-6 flex flex-col gap-4" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-amber-900">{editing ? 'Edit kid' : 'Add a kid'}</h2>
+            <h2 className="text-lg font-bold text-ink-primary">{editing ? 'Edit kid' : 'Add a kid'}</h2>
             <div className="text-center text-5xl">{draft.avatar}</div>
             <input
               autoFocus
               placeholder="Kid's name"
               value={draft.name}
               onChange={e => setDraft(d => ({ ...d, name: e.target.value }))}
-              className="rounded-xl border-2 border-amber-200 px-3 py-2 text-amber-900 outline-none focus:border-amber-400"
+              className="rounded-xl border-2 border-line px-3 py-2 text-ink-primary outline-none focus:border-brand"
             />
             <div>
-              <p className="text-sm font-medium text-amber-700 mb-2">Avatar</p>
+              <p className="text-sm font-medium text-ink-secondary mb-2">Avatar</p>
               <div className="flex flex-wrap gap-2">
                 {AVATARS.map(a => (
                   <button
                     key={a}
                     onClick={() => setDraft(d => ({ ...d, avatar: a }))}
-                    className={`text-2xl p-2 rounded-xl ${draft.avatar === a ? 'bg-amber-200 scale-110' : 'bg-amber-50 hover:bg-amber-100'}`}
+                    className={`text-2xl p-2 rounded-xl ${draft.avatar === a ? 'bg-brand-light scale-110' : 'bg-page hover:bg-brand-light'}`}
                   >
                     {a}
                   </button>
@@ -109,13 +109,13 @@ export default function KidsPage() {
               </div>
             </div>
             <div>
-              <p className="text-sm font-medium text-amber-700 mb-2">Color</p>
+              <p className="text-sm font-medium text-ink-secondary mb-2">Color</p>
               <div className="flex gap-2 flex-wrap">
                 {COLORS.map(c => (
                   <button
                     key={c}
                     onClick={() => setDraft(d => ({ ...d, colorAccent: c }))}
-                    className={`w-8 h-8 rounded-full transition-transform ${draft.colorAccent === c ? 'scale-125 ring-2 ring-offset-2 ring-amber-400' : ''}`}
+                    className={`w-8 h-8 rounded-full transition-transform ${draft.colorAccent === c ? 'scale-125 ring-2 ring-offset-2 ring-brand' : ''}`}
                     style={{ backgroundColor: c }}
                   />
                 ))}
@@ -124,7 +124,7 @@ export default function KidsPage() {
             <button
               onClick={handleSave}
               disabled={!draft.name.trim()}
-              className="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-bold transition-colors"
+              className="w-full py-3 rounded-2xl bg-brand hover:bg-brand-hover disabled:opacity-40 text-white font-bold transition-colors"
             >
               {editing ? 'Save changes' : 'Add kid'}
             </button>

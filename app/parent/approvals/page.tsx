@@ -12,8 +12,8 @@ export default function ApprovalsPage() {
   return (
     <main className="p-5 max-w-lg mx-auto">
       <header className="mb-6 pt-4">
-        <h1 className="text-2xl font-bold text-amber-900">Approvals</h1>
-        <p className="text-amber-600 text-sm mt-1">
+        <h1 className="text-2xl font-bold text-ink-primary">Approvals</h1>
+        <p className="text-ink-secondary text-sm mt-1">
           {pending.length === 0 ? 'Nothing pending.' : `${pending.length} request${pending.length !== 1 ? 's' : ''} waiting`}
         </p>
       </header>
@@ -21,7 +21,7 @@ export default function ApprovalsPage() {
       {pending.length === 0 ? (
         <div className="text-center py-16">
           <div className="text-5xl mb-3">🎉</div>
-          <p className="text-amber-700 font-medium">All caught up!</p>
+          <p className="text-ink-secondary font-medium">All caught up!</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
@@ -29,21 +29,21 @@ export default function ApprovalsPage() {
             const kid = store.kids.find(k => k.id === tx.kidId)
             const reward = store.rewards.find(r => r.id === tx.rewardId)
             return (
-              <div key={tx.id} className="bg-white rounded-2xl p-4 shadow-sm">
+              <div key={tx.id} className="bg-white rounded-2xl p-4 shadow-card">
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-3xl">{kid?.avatar ?? '👦'}</span>
                   <div>
-                    <p className="font-bold text-amber-900">{kid?.name ?? 'Unknown'}</p>
-                    <p className="text-amber-500 text-sm">
+                    <p className="font-bold text-ink-primary">{kid?.name ?? 'Unknown'}</p>
+                    <p className="text-brand text-sm">
                       {new Date(tx.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>
-                <div className="bg-amber-50 rounded-xl p-3 mb-3 flex items-center gap-2">
+                <div className="bg-page rounded-xl p-3 mb-3 flex items-center gap-2">
                   <span className="text-xl">🎁</span>
                   <div>
-                    <p className="font-medium text-amber-900">{reward?.name ?? 'Unknown reward'}</p>
-                    <p className="text-amber-500 text-sm">⭐ {tx.amount} stars</p>
+                    <p className="font-medium text-ink-primary">{reward?.name ?? 'Unknown reward'}</p>
+                    <p className="text-brand text-sm">⭐ {tx.amount} stars</p>
                   </div>
                 </div>
                 <div className="flex gap-2">

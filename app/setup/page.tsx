@@ -51,7 +51,7 @@ export default function SetupPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-amber-50">
+    <main className="min-h-screen flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm">
 
         {/* Step: family name */}
@@ -59,8 +59,8 @@ export default function SetupPage() {
           <div className="flex flex-col gap-6">
             <div className="text-center">
               <div className="text-6xl mb-3">🏠</div>
-              <h1 className="text-2xl font-bold text-amber-900">Name your family</h1>
-              <p className="text-amber-600 mt-1 text-sm">You can change this later.</p>
+              <h1 className="text-2xl font-bold text-ink-primary">Name your family</h1>
+              <p className="text-ink-secondary mt-1 text-sm">You can change this later.</p>
             </div>
             <input
               autoFocus
@@ -69,12 +69,12 @@ export default function SetupPage() {
               value={familyName}
               onChange={e => setFamilyName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleCreateFamily()}
-              className="w-full rounded-2xl border-2 border-amber-200 bg-white px-4 py-3 text-lg text-amber-900 placeholder-amber-300 outline-none focus:border-amber-400"
+              className="w-full rounded-2xl border-2 border-line bg-white px-4 py-3 text-lg text-ink-primary placeholder-ink-muted outline-none focus:border-brand"
             />
             <button
               onClick={handleCreateFamily}
               disabled={!familyName.trim()}
-              className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-bold text-lg transition-colors"
+              className="w-full py-4 rounded-2xl bg-brand hover:bg-brand-hover disabled:opacity-40 text-white font-bold text-lg transition-colors"
             >
               Continue →
             </button>
@@ -86,8 +86,8 @@ export default function SetupPage() {
           <div className="flex flex-col gap-6">
             <div className="text-center">
               <div className="text-6xl mb-3">{kidAvatar}</div>
-              <h1 className="text-2xl font-bold text-amber-900">Add your first kid</h1>
-              <p className="text-amber-600 mt-1 text-sm">You can add more later.</p>
+              <h1 className="text-2xl font-bold text-ink-primary">Add your first kid</h1>
+              <p className="text-ink-secondary mt-1 text-sm">You can add more later.</p>
             </div>
 
             <input
@@ -97,17 +97,17 @@ export default function SetupPage() {
               value={kidName}
               onChange={e => setKidName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleAddKid()}
-              className="w-full rounded-2xl border-2 border-amber-200 bg-white px-4 py-3 text-lg text-amber-900 placeholder-amber-300 outline-none focus:border-amber-400"
+              className="w-full rounded-2xl border-2 border-line bg-white px-4 py-3 text-lg text-ink-primary placeholder-ink-muted outline-none focus:border-brand"
             />
 
             <div>
-              <p className="text-sm font-medium text-amber-700 mb-2">Pick an avatar</p>
+              <p className="text-sm font-medium text-ink-secondary mb-2">Pick an avatar</p>
               <div className="flex flex-wrap gap-2">
                 {KID_AVATARS.map(emoji => (
                   <button
                     key={emoji}
                     onClick={() => setKidAvatar(emoji)}
-                    className={`text-2xl p-2 rounded-xl transition-all ${kidAvatar === emoji ? 'bg-amber-300 scale-110' : 'bg-white hover:bg-amber-100'}`}
+                    className={`text-2xl p-2 rounded-xl transition-all ${kidAvatar === emoji ? 'bg-brand-light scale-110' : 'bg-white hover:bg-brand-light'}`}
                   >
                     {emoji}
                   </button>
@@ -116,13 +116,13 @@ export default function SetupPage() {
             </div>
 
             <div>
-              <p className="text-sm font-medium text-amber-700 mb-2">Pick a color</p>
+              <p className="text-sm font-medium text-ink-secondary mb-2">Pick a color</p>
               <div className="flex gap-2">
                 {KID_COLORS.map(color => (
                   <button
                     key={color}
                     onClick={() => setKidColor(color)}
-                    className={`w-8 h-8 rounded-full transition-transform ${kidColor === color ? 'scale-125 ring-2 ring-offset-2 ring-amber-400' : ''}`}
+                    className={`w-8 h-8 rounded-full transition-transform ${kidColor === color ? 'scale-125 ring-2 ring-offset-2 ring-brand' : ''}`}
                     style={{ backgroundColor: color }}
                   />
                 ))}
@@ -132,11 +132,11 @@ export default function SetupPage() {
             <button
               onClick={handleAddKid}
               disabled={!kidName.trim()}
-              className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-bold text-lg transition-colors"
+              className="w-full py-4 rounded-2xl bg-brand hover:bg-brand-hover disabled:opacity-40 text-white font-bold text-lg transition-colors"
             >
               Add {kidName.trim() || 'kid'} →
             </button>
-            <button onClick={handleSkipKid} className="text-center text-amber-500 text-sm underline">
+            <button onClick={handleSkipKid} className="text-center text-brand text-sm underline">
               Skip for now
             </button>
           </div>
@@ -147,24 +147,24 @@ export default function SetupPage() {
           <div className="flex flex-col gap-6">
             <div className="text-center">
               <div className="text-6xl mb-3">🎁</div>
-              <h1 className="text-2xl font-bold text-amber-900">Add starter rewards?</h1>
-              <p className="text-amber-600 mt-1 text-sm">We&apos;ll add a few popular ones. You can edit them anytime.</p>
+              <h1 className="text-2xl font-bold text-ink-primary">Add starter rewards?</h1>
+              <p className="text-ink-secondary mt-1 text-sm">We&apos;ll add a few popular ones. You can edit them anytime.</p>
             </div>
             <ul className="flex flex-col gap-2">
               {SEED_REWARDS.map(r => (
-                <li key={r.name} className="flex items-center justify-between bg-white rounded-2xl px-4 py-3 border border-amber-100">
-                  <span className="text-amber-900 font-medium">{r.name}</span>
-                  <span className="text-amber-500 font-bold">⭐ {r.pointsCost}</span>
+                <li key={r.name} className="flex items-center justify-between bg-white rounded-2xl px-4 py-3 border border-line-subtle">
+                  <span className="text-ink-primary font-medium">{r.name}</span>
+                  <span className="text-brand font-bold">⭐ {r.pointsCost}</span>
                 </li>
               ))}
             </ul>
             <button
               onClick={handleAddRewards}
-              className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-lg transition-colors"
+              className="w-full py-4 rounded-2xl bg-brand hover:bg-brand-hover text-white font-bold text-lg transition-colors"
             >
               Add these & finish 🎉
             </button>
-            <button onClick={handleSkipRewards} className="text-center text-amber-500 text-sm underline">
+            <button onClick={handleSkipRewards} className="text-center text-brand text-sm underline">
               Skip, I&apos;ll add my own
             </button>
           </div>

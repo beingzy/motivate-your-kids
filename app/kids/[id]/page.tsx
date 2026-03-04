@@ -31,18 +31,18 @@ export default function KidDashboard({ params }: { params: { id: string } }) {
       <header className="flex items-center justify-between pt-6 mb-8">
         <div className="flex items-center gap-3">
           <span className="text-5xl">{kid.avatar}</span>
-          <h1 className="text-2xl font-bold text-amber-900">{kid.name}</h1>
+          <h1 className="text-2xl font-bold text-ink-primary">{kid.name}</h1>
         </div>
-        <button onClick={() => router.push('/')} className="text-sm text-amber-400 underline">
+        <button onClick={() => router.push('/')} className="text-sm text-ink-muted underline">
           Switch
         </button>
       </header>
 
       {/* Points balance */}
-      <div className="bg-white rounded-3xl shadow-sm p-8 text-center mb-6" style={{ borderTop: `4px solid ${kid.colorAccent}` }}>
-        <p className="text-amber-500 font-medium text-sm mb-2">My Stars</p>
+      <div className="bg-white rounded-3xl shadow-card p-8 text-center mb-6" style={{ borderTop: `4px solid ${kid.colorAccent}` }}>
+        <p className="text-brand font-medium text-sm mb-2">My Stars</p>
         <div key={balance} className="flex items-center justify-center gap-2 animate-star-pop">
-          <span className="text-6xl font-black text-amber-900">{balance}</span>
+          <span className="text-6xl font-black text-ink-primary">{balance}</span>
           <span className="text-5xl">⭐</span>
         </div>
       </div>
@@ -51,10 +51,10 @@ export default function KidDashboard({ params }: { params: { id: string } }) {
       {kidBadgeRecords.length > 0 && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <p className="font-bold text-amber-800">My Badges</p>
+            <p className="font-bold text-ink-secondary">My Badges</p>
             <button
               onClick={() => router.push(`/kids/${id}/badges`)}
-              className="text-sm text-amber-500 underline"
+              className="text-sm text-brand underline"
             >
               See all ({kidBadgeRecords.length})
             </button>
@@ -63,9 +63,9 @@ export default function KidDashboard({ params }: { params: { id: string } }) {
             {kidBadgeRecords.slice(0, 8).map(kb => {
               const badge = store.badges.find(b => b.id === kb.badgeId)
               return badge ? (
-                <div key={kb.badgeId} className="bg-white rounded-2xl px-3 py-2 shadow-sm text-center flex flex-col items-center gap-0.5">
+                <div key={kb.badgeId} className="bg-white rounded-2xl px-3 py-2 shadow-card text-center flex flex-col items-center gap-0.5">
                   <span className="text-2xl">{badge.icon}</span>
-                  <span className="text-[10px] text-amber-600 font-medium leading-tight max-w-[52px] truncate">{badge.name}</span>
+                  <span className="text-[10px] text-ink-secondary font-medium leading-tight max-w-[52px] truncate">{badge.name}</span>
                 </div>
               ) : null
             })}
@@ -76,18 +76,18 @@ export default function KidDashboard({ params }: { params: { id: string } }) {
       {/* Recent activity */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <p className="font-bold text-amber-800">Recent</p>
+          <p className="font-bold text-ink-secondary">Recent</p>
           {allTxs.length > 10 && (
             <button
               onClick={() => router.push(`/kids/${id}/history`)}
-              className="text-sm text-amber-500 underline"
+              className="text-sm text-brand underline"
             >
               See all ({allTxs.length})
             </button>
           )}
         </div>
         {recentTxs.length === 0 ? (
-          <div className="text-center py-8 text-amber-400 text-sm">
+          <div className="text-center py-8 text-ink-muted text-sm">
             No activity yet — ask a parent to log your first action!
           </div>
         ) : (
@@ -99,15 +99,15 @@ export default function KidDashboard({ params }: { params: { id: string } }) {
               const icon = isEarn ? getCategoryIcon(tx.actionId) : '🎁'
               const label = action?.name ?? reward?.name ?? tx.reason ?? tx.note ?? (isEarn ? 'Bonus stars' : tx.type === 'deduct' ? 'Stars deducted' : 'Reward')
               return (
-                <div key={tx.id} className="bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm">
+                <div key={tx.id} className="bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-card">
                   <span className="text-xl">{icon}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-amber-900 truncate">{label}</p>
-                    <p className="text-xs text-amber-400">
+                    <p className="text-sm font-medium text-ink-primary truncate">{label}</p>
+                    <p className="text-xs text-ink-muted">
                       {new Date(tx.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </p>
                   </div>
-                  <span className={`font-bold text-sm flex-shrink-0 ${isEarn ? 'text-green-500' : 'text-amber-400'}`}>
+                  <span className={`font-bold text-sm flex-shrink-0 ${isEarn ? 'text-green-500' : 'text-ink-muted'}`}>
                     {isEarn ? '+' : '-'}{tx.amount}⭐
                   </span>
                 </div>

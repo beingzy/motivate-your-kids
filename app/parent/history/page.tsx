@@ -25,7 +25,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_COLOR: Record<string, string> = {
   approved: 'text-green-500',
-  pending: 'text-amber-400',
+  pending: 'text-ink-muted',
   denied: 'text-red-400',
 }
 
@@ -39,18 +39,18 @@ export default function HistoryPage() {
   return (
     <main className="p-5 max-w-lg mx-auto">
       <header className="pt-4 mb-6">
-        <h1 className="text-2xl font-bold text-amber-900">Activity History</h1>
-        <p className="text-amber-500 text-sm mt-1">{allTxs.length} total events</p>
+        <h1 className="text-2xl font-bold text-ink-primary">Activity History</h1>
+        <p className="text-brand text-sm mt-1">{allTxs.length} total events</p>
       </header>
 
       {allTxs.length === 0 ? (
         <div className="text-center py-16">
           <div className="text-5xl mb-3">📋</div>
-          <p className="text-amber-700 font-medium">No activity yet.</p>
-          <p className="text-amber-500 text-sm mt-1">Log some actions to see history here.</p>
+          <p className="text-ink-secondary font-medium">No activity yet.</p>
+          <p className="text-brand text-sm mt-1">Log some actions to see history here.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-card overflow-hidden">
           {allTxs.map((tx, i) => {
             const kid = store.kids.find(k => k.id === tx.kidId)
             const action = tx.actionId ? store.actions.find(a => a.id === tx.actionId) : null
@@ -61,16 +61,16 @@ export default function HistoryPage() {
             return (
               <div
                 key={tx.id}
-                className={`flex items-center gap-3 px-4 py-3 ${i < allTxs.length - 1 ? 'border-b border-amber-50' : ''}`}
+                className={`flex items-center gap-3 px-4 py-3 ${i < allTxs.length - 1 ? 'border-b border-line-subtle' : ''}`}
               >
                 <span className="text-2xl w-8 text-center">{kid?.avatar ?? '👦'}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-amber-900 text-sm truncate">
-                    <span className="text-amber-500">{kid?.name ?? '?'}</span>
+                  <p className="font-medium text-ink-primary text-sm truncate">
+                    <span className="text-brand">{kid?.name ?? '?'}</span>
                     {' · '}
                     {label}
                   </p>
-                  <p className="text-amber-400 text-xs">{formatTime(tx.timestamp)}</p>
+                  <p className="text-ink-muted text-xs">{formatTime(tx.timestamp)}</p>
                 </div>
                 <div className="flex flex-col items-end gap-0.5">
                   <span className={`font-bold text-sm ${isEarn ? 'text-green-500' : 'text-red-400'}`}>

@@ -67,40 +67,40 @@ export default function SettingsPage() {
   return (
     <main className="p-5 max-w-lg mx-auto pb-28">
       <header className="pt-4 mb-6">
-        <h1 className="text-2xl font-bold text-amber-900">Settings</h1>
+        <h1 className="text-2xl font-bold text-ink-primary">Settings</h1>
       </header>
 
       {/* Family name */}
-      <section className="bg-white rounded-2xl p-5 shadow-sm mb-5">
-        <h2 className="text-sm font-semibold text-amber-500 uppercase tracking-wide mb-3">Family</h2>
+      <section className="bg-white rounded-2xl p-5 shadow-card mb-5">
+        <h2 className="text-sm font-semibold text-brand uppercase tracking-wide mb-3">Family</h2>
         {editingName ? (
           <div className="flex gap-2">
             <input
               autoFocus
               value={familyNameDraft}
               onChange={e => setFamilyNameDraft(e.target.value)}
-              className="flex-1 rounded-xl border-2 border-amber-300 px-3 py-2 text-amber-900 outline-none focus:border-amber-500"
+              className="flex-1 rounded-xl border-2 border-line px-3 py-2 text-ink-primary outline-none focus:border-brand"
               onKeyDown={e => { if (e.key === 'Enter') saveFamilyName() }}
             />
             <button
               onClick={saveFamilyName}
-              className="px-4 py-2 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors text-sm"
+              className="px-4 py-2 rounded-xl bg-brand text-white font-bold hover:bg-brand-hover transition-colors text-sm"
             >
               Save
             </button>
             <button
               onClick={() => setEditingName(false)}
-              className="px-3 py-2 rounded-xl text-amber-400 text-sm"
+              className="px-3 py-2 rounded-xl text-ink-muted text-sm"
             >
               Cancel
             </button>
           </div>
         ) : (
           <div className="flex items-center justify-between">
-            <p className="text-amber-900 font-bold text-lg">{store.family.name}</p>
+            <p className="text-ink-primary font-bold text-lg">{store.family.name}</p>
             <button
               onClick={startEditName}
-              className="text-sm text-amber-400 hover:text-amber-600 transition-colors"
+              className="text-sm text-ink-muted hover:text-ink-secondary transition-colors"
             >
               Edit
             </button>
@@ -109,13 +109,13 @@ export default function SettingsPage() {
       </section>
 
       {/* Language */}
-      <section className="bg-white rounded-2xl p-5 shadow-sm mb-5">
-        <h2 className="text-sm font-semibold text-amber-500 uppercase tracking-wide mb-3">{t('settings.language')}</h2>
-        <div className="flex rounded-xl overflow-hidden border-2 border-amber-100">
+      <section className="bg-white rounded-2xl p-5 shadow-card mb-5">
+        <h2 className="text-sm font-semibold text-brand uppercase tracking-wide mb-3">{t('settings.language')}</h2>
+        <div className="flex rounded-xl overflow-hidden border-2 border-line-subtle">
           <button
             onClick={() => setLocale('en')}
             className={`flex-1 py-2.5 text-sm font-bold transition-colors ${
-              locale === 'en' ? 'bg-amber-500 text-white' : 'text-amber-500 hover:bg-amber-50'
+              locale === 'en' ? 'bg-brand text-white' : 'text-brand hover:bg-page'
             }`}
           >
             {t('settings.lang.en')}
@@ -123,7 +123,7 @@ export default function SettingsPage() {
           <button
             onClick={() => setLocale('zh')}
             className={`flex-1 py-2.5 text-sm font-bold transition-colors ${
-              locale === 'zh' ? 'bg-amber-500 text-white' : 'text-amber-500 hover:bg-amber-50'
+              locale === 'zh' ? 'bg-brand text-white' : 'text-brand hover:bg-page'
             }`}
           >
             {t('settings.lang.zh')}
@@ -132,12 +132,12 @@ export default function SettingsPage() {
       </section>
 
       {/* Manage Categories */}
-      <section className="bg-white rounded-2xl p-5 shadow-sm mb-5">
+      <section className="bg-white rounded-2xl p-5 shadow-card mb-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-amber-500 uppercase tracking-wide">Categories</h2>
+          <h2 className="text-sm font-semibold text-brand uppercase tracking-wide">Categories</h2>
           <button
             onClick={() => setShowAddCat(v => !v)}
-            className="text-sm text-amber-500 hover:text-amber-700 font-medium transition-colors"
+            className="text-sm text-brand hover:text-ink-secondary font-medium transition-colors"
           >
             {showAddCat ? 'Cancel' : '+ Add'}
           </button>
@@ -149,7 +149,7 @@ export default function SettingsPage() {
               value={newCatEmoji}
               onChange={e => setNewCatEmoji(e.target.value)}
               maxLength={2}
-              className="w-14 text-center rounded-xl border-2 border-amber-200 px-2 py-2 text-xl outline-none focus:border-amber-400"
+              className="w-14 text-center rounded-xl border-2 border-line px-2 py-2 text-xl outline-none focus:border-brand"
             />
             <input
               autoFocus
@@ -157,12 +157,12 @@ export default function SettingsPage() {
               value={newCatName}
               onChange={e => setNewCatName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleAddCategory() }}
-              className="flex-1 rounded-xl border-2 border-amber-200 px-3 py-2 text-amber-900 outline-none focus:border-amber-400"
+              className="flex-1 rounded-xl border-2 border-line px-3 py-2 text-ink-primary outline-none focus:border-brand"
             />
             <button
               onClick={handleAddCategory}
               disabled={!newCatName.trim()}
-              className="px-4 py-2 rounded-xl bg-amber-500 disabled:opacity-40 text-white font-bold hover:bg-amber-600 transition-colors text-sm"
+              className="px-4 py-2 rounded-xl bg-brand disabled:opacity-40 text-white font-bold hover:bg-brand-hover transition-colors text-sm"
             >
               Add
             </button>
@@ -170,13 +170,13 @@ export default function SettingsPage() {
         )}
 
         {store.categories.length === 0 ? (
-          <p className="text-amber-400 text-sm text-center py-4">No categories yet.</p>
+          <p className="text-ink-muted text-sm text-center py-4">No categories yet.</p>
         ) : (
           <div className="flex flex-col gap-2">
             {store.categories.map(cat => (
-              <div key={cat.id} className="flex items-center gap-3 py-2 border-b border-amber-50 last:border-0">
+              <div key={cat.id} className="flex items-center gap-3 py-2 border-b border-line-subtle last:border-0">
                 <span className="text-xl">{cat.icon}</span>
-                <span className="flex-1 text-amber-900 font-medium">{cat.name}</span>
+                <span className="flex-1 text-ink-primary font-medium">{cat.name}</span>
                 <button
                   onClick={() => handleDeleteCategory(cat)}
                   className="text-red-300 hover:text-red-500 text-sm transition-colors"
@@ -190,7 +190,7 @@ export default function SettingsPage() {
       </section>
 
       {/* Danger zone */}
-      <section className="bg-red-50 rounded-2xl p-5 shadow-sm border border-red-100">
+      <section className="bg-red-50 rounded-2xl p-5 shadow-card border border-red-100">
         <h2 className="text-sm font-semibold text-red-400 uppercase tracking-wide mb-3">Danger Zone</h2>
         <p className="text-red-600 text-sm mb-4">
           This will permanently delete all family data including kids, actions, rewards, and history. This cannot be undone.

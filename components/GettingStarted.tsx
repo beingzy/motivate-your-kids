@@ -69,16 +69,16 @@ export function GettingStarted({ store, onDismiss }: Props) {
   }, [allDone, onDismiss])
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border-l-4 border-amber-400 px-4 py-3 mb-4">
+    <div className="bg-white rounded-2xl shadow-card px-4 py-3 mb-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-base">{allDone ? '🎉' : '🚀'}</span>
-          <p className="text-sm font-bold text-amber-900">
+          <p className="text-sm font-bold text-ink-primary">
             {allDone ? 'You\'re all set!' : 'Getting Started'}
           </p>
           {!allDone && (
-            <span className="text-[10px] font-bold bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold bg-brand-light text-ink-secondary px-1.5 py-0.5 rounded-full">
               {doneCount}/{steps.length}
             </span>
           )}
@@ -86,7 +86,7 @@ export function GettingStarted({ store, onDismiss }: Props) {
         {!allDone && (
           <button
             onClick={onDismiss}
-            className="text-amber-400 hover:text-amber-600 text-xs font-medium transition-colors"
+            className="text-ink-muted hover:text-ink-secondary text-xs font-medium transition-colors"
           >
             Got it
           </button>
@@ -94,28 +94,28 @@ export function GettingStarted({ store, onDismiss }: Props) {
       </div>
 
       {allDone ? (
-        <p className="text-xs text-amber-600">
+        <p className="text-xs text-ink-secondary">
           You know how the star reward system works. Keep it up!
         </p>
       ) : (
         <div className="flex flex-col gap-2">
           {steps.map((step, i) => (
             <div key={i} className="flex items-start gap-2.5">
-              <span className={`text-sm mt-0.5 flex-shrink-0 ${step.done ? 'text-green-500' : 'text-amber-300'}`}>
+              <span className={`text-sm mt-0.5 flex-shrink-0 ${step.done ? 'text-green-500' : 'text-ink-muted'}`}>
                 {step.done ? '✅' : '○'}
               </span>
               <div className="flex-1 min-w-0">
-                <p className={`text-xs font-semibold leading-snug ${step.done ? 'text-amber-400 line-through' : 'text-amber-900'}`}>
+                <p className={`text-xs font-semibold leading-snug ${step.done ? 'text-ink-muted line-through' : 'text-ink-primary'}`}>
                   {step.label}
                 </p>
                 {!step.done && (
-                  <p className="text-[11px] text-amber-500 mt-0.5 leading-snug">{step.hint}</p>
+                  <p className="text-[11px] text-brand mt-0.5 leading-snug">{step.hint}</p>
                 )}
               </div>
               {!step.done && step.href && (
                 <button
                   onClick={() => router.push(step.href!)}
-                  className="text-[11px] text-amber-500 hover:text-amber-700 font-medium whitespace-nowrap flex-shrink-0 underline"
+                  className="text-[11px] text-brand hover:text-ink-secondary font-medium whitespace-nowrap flex-shrink-0 underline"
                 >
                   {step.linkLabel}
                 </button>
