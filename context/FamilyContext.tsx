@@ -218,7 +218,7 @@ interface FamilyContextValue {
   logCompletion: (kidId: string, actionId: string, amount?: number, reason?: string) => void
   awardBonus: (kidId: string, amount: number, note: string) => void
   awardDeduction: (kidId: string, amount: number, reason?: string) => void
-  redeemReward: (kidId: string, rewardId: string) => void
+  redeemReward: (kidId: string, rewardId: string, costOverride?: number) => void
   requestRedemption: (kidId: string, rewardId: string) => void
   approveRedemption: (transactionId: string) => void
   denyRedemption: (transactionId: string) => void
@@ -453,14 +453,14 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const redeemReward = useCallback(
-    (kidId: string, rewardId: string) => {
+    (kidId: string, rewardId: string, costOverride?: number) => {
       const reward = store.rewards.find(r => r.id === rewardId)
       if (!reward) return
       const tx: Transaction = {
         id: generateId(),
         kidId,
         type: 'redeem',
-        amount: reward.pointsCost,
+        amount: costOverride ?? reward.pointsCost,
         rewardId,
         status: 'approved',
         timestamp: new Date().toISOString(),

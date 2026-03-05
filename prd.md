@@ -558,3 +558,73 @@ Original feedback in Chinese; interpreted and prioritised below.
 - **Redeem section on kid profile:** Label "Redeem a reward" is parent-centric but clear. Consider also showing the kid's recent redemption history inline so parents can track what was given.
 - **Points economy calibration:** With actions supporting 1–500 stars and rewards supporting custom costs, families need guidance on balancing the economy. A setup nudge ("typical actions: 3–10 stars; typical rewards: 20–50 stars") would help first-time parents.
 - **LogActionFab on kid detail page:** The FAB is redundant when already on a kid's page that has an inline action list. Consider hiding FAB on `/parent/kids/[id]` to reduce visual clutter.
+
+---
+
+### Round 4 — Parent User Feedback (Mar 2026)
+
+Feedback collected from a parent user after v1.1 shipped.
+Original feedback in Chinese; translated and interpreted below.
+
+---
+
+#### FB-8 · Direct Number Input for Star Amount  *(High priority)*
+
+> "加星星的数字之前那种形式可以，只要可以把第一个数也可以改就行，总的来说要可以直接录入数字是最方便的"
+> ("The previous stepper form is fine, just need to be able to change the first digit too. Overall, being able to directly enter a number is most convenient.")
+
+**Problem:** The current star-amount stepper in the earn/deduct sheet shows a read-only number display. Users cannot tap the number and type directly — they must tap +/− repeatedly to reach their target, which is slow for large values.
+
+**Requirements:**
+- Replace the read-only number display with `<input type="number">` that is always directly editable.
+- The +/− stepper buttons remain as convenience shortcuts (increment/decrement by 1).
+- Input is pre-filled with a sensible default (e.g., the action's `pointsValue` when an action is selected, otherwise 1).
+- Min value: 1. No upper cap enforced in UI (parent has full control).
+- On mobile, tapping the input should open a numeric keyboard (`inputMode="numeric"`).
+- Applies everywhere a star amount is entered: earn sheet, deduct sheet, bonus-points dialog.
+
+---
+
+#### FB-9 · Home Page — Per-Kid Cards with Inline Action Sheets  *(High priority)*
+
+> "主页直接显示人名，星星数，和 add，deduct，redeem 摁钮，然后进入具体事件和编辑星星的界面，custom 星星和事件摁钮要放在 top，接下来再是历史事件"
+> ("The home page should directly show each kid's name, star balance, and Add/Deduct/Redeem buttons. Tapping one enters a specific event and star-editing interface where custom star input and event buttons are at the top, followed by history events.")
+
+**Problem:** The current home page uses global Add/Deduct/Redeem buttons that require a kid-picker step inside the sheet. Users want per-kid buttons on the home page itself so the action is pre-contextualised — no extra selection step.
+
+**Design:**
+
+*Home page layout (replaces current kid chips + global buttons):*
+- One card per kid, showing: avatar + name + current star balance + three inline buttons (⭐ Add, ⚠️ Deduct, 🎁 Redeem).
+- Cards are full-width, stacked vertically — no horizontal scroll.
+- Tapping any button opens a **tall bottom sheet (~85% screen height)**, pre-locked to that kid. No kid picker inside the sheet.
+
+*Per-kid bottom sheet layout (Add / Deduct modes):*
+1. **Header:** kid avatar + name + mode label (e.g., "Add Stars for Mia") + close button.
+2. **Action section (top):**
+   - Direct number input (see FB-8) — typeable, with +/− buttons.
+   - Event buttons: tap-target grid of active actions (earn or deduction actions depending on mode). Tapping an action pre-fills the amount with that action's `pointsValue` and records the `actionId` on the transaction.
+   - "Custom (no event)" option always available for free-form amount entry without linking to a specific action.
+   - Optional reason text field (shown when no event is selected, or always visible in Deduct mode).
+3. **Confirm button:** "Award X ⭐ to [Kid]" or "Deduct X ⭐ from [Kid]".
+4. **Transaction history (below the fold, scrollable):** last N transactions for this kid, so the parent can see context while logging.
+
+*Per-kid bottom sheet layout (Redeem mode):*
+1. **Header:** kid avatar + name + "Redeem for [Kid]" + close button.
+2. **Reward list:** all active rewards shown as tap targets. Rewards the kid cannot afford are dimmed but tappable (parent override allowed). Tapping a reward opens a **confirm dialog** showing reward name, default cost, and an optional amount adjustment input.
+3. Confirm → deducts stars and logs `type: 'redeem'` transaction.
+
+**What this replaces:**
+- The current global quick-action buttons + kid-picker inside the sheet (from FB-5/v1.1) are removed.
+- The horizontal kid-balance chip row is replaced by the per-kid card layout.
+- Getting Started guide card (if active) remains at the top of the home page, above the kid cards.
+- Activity feed (date-grouped, all kids) remains below the kid cards as secondary context.
+
+---
+
+#### Priority Matrix (Round 4)
+
+| ID | Feature | Priority | Effort | Target |
+|----|---------|----------|--------|--------|
+| FB-8 | Direct number input | High | S | v1.2 |
+| FB-9 | Home page per-kid layout | High | M | v1.2 |

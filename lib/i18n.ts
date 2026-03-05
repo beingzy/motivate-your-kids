@@ -54,6 +54,11 @@ const en: Dict = {
   'quick.select-kid-first': 'Select a kid first',
   'quick.no-actions': 'No actions yet. Create one below.',
   'quick.no-rewards': 'No rewards set up yet.',
+  'quick.recent': 'Recent activity',
+  'quick.no-history': 'No activity yet',
+  'quick.confirm-redeem': 'Confirm Redeem',
+  'quick.redeem-adjust': 'Adjust cost (optional)',
+  'quick.balance': '{n} ⭐ balance',
 
   // Settings
   'settings.title': 'Settings',
@@ -123,6 +128,11 @@ const zh: Dict = {
   'quick.select-kid-first': '请先选择孩子',
   'quick.no-actions': '还没有动作，在下方新建一个。',
   'quick.no-rewards': '还没有设置奖励。',
+  'quick.recent': '近期记录',
+  'quick.no-history': '还没有活动',
+  'quick.confirm-redeem': '确认兑换',
+  'quick.redeem-adjust': '调整费用（可选）',
+  'quick.balance': '余额 {n} ⭐',
 
   // Settings
   'settings.title': '设置',
