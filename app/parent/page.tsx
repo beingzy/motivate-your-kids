@@ -74,9 +74,10 @@ export default function ParentDashboard() {
   const [redeemRewardId, setRedeemRewardId] = useState<string | null>(null)
   const [redeemCost, setRedeemCost] = useState(0)
 
-  // View more in sheet
+  // View more / search in sheet
   const [showAllActions, setShowAllActions] = useState(false)
   const [showAllRewards, setShowAllRewards] = useState(false)
+  const [quickSearch, setQuickSearch] = useState('')
 
   // Undo delete
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
@@ -187,6 +188,7 @@ export default function ParentDashboard() {
     setRedeemRewardId(null)
     setShowAllActions(false)
     setShowAllRewards(false)
+    setQuickSearch('')
   }
 
   function handleSelectAction(actionId: string) {
@@ -278,8 +280,13 @@ export default function ParentDashboard() {
   const sortedRewards = [...activeRewards].sort(
     (a, b) => (rewardLastUsed[b.id] ?? 0) - (rewardLastUsed[a.id] ?? 0)
   )
-  const displayedRewards = showAllRewards ? sortedRewards : sortedRewards.slice(0, 3)
-  const hasMoreRewards = sortedRewards.length > 3
+  const filteredRewards = quickSearch
+    ? sortedRewards.filter(r => r.name.toLowerCase().includes(quickSearch.toLowerCase()))
+    : sortedRewards
+  const displayedRewards = quickSearch
+    ? filteredRewards
+    : (showAllRewards ? sortedRewards : sortedRewards.slice(0, 3))
+  const hasMoreRewards = !quickSearch && sortedRewards.length > 3
 
   const quickKid = quickKidId ? store.kids.find(k => k.id === quickKidId) : null
   const isEarnOrDeduct = quickType === 'earn' || quickType === 'deduct'
@@ -287,8 +294,13 @@ export default function ParentDashboard() {
   const sortedRelevantActions = [...relevantActions].sort(
     (a, b) => (actionLastUsed[b.id] ?? 0) - (actionLastUsed[a.id] ?? 0)
   )
-  const displayedActions = showAllActions ? sortedRelevantActions : sortedRelevantActions.slice(0, 3)
-  const hasMoreActions = sortedRelevantActions.length > 3
+  const filteredActions = quickSearch
+    ? sortedRelevantActions.filter(a => a.name.toLowerCase().includes(quickSearch.toLowerCase()))
+    : sortedRelevantActions
+  const displayedActions = quickSearch
+    ? filteredActions
+    : (showAllActions ? sortedRelevantActions : sortedRelevantActions.slice(0, 3))
+  const hasMoreActions = !quickSearch && sortedRelevantActions.length > 3
   const kidBalance = quickKidId ? getBalance(quickKidId) : 0
   const kidTxs = quickKidId
     ? getTransactions(quickKidId)
@@ -525,10 +537,33 @@ export default function ParentDashboard() {
                     {t('quick.select-action')}
                   </p>
 
+                  {/* Search actions */}
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm pointer-events-none">🔍</span>
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={quickSearch}
+                      onChange={e => setQuickSearch(e.target.value)}
+                      className="w-full rounded-xl border-2 border-line pl-9 pr-8 py-2 text-sm text-ink-primary outline-none focus:border-brand"
+                    />
+                    {quickSearch && (
+                      <button
+                        onClick={() => setQuickSearch('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink-secondary text-sm"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
                   {/* Action list */}
                   <div className="flex flex-col gap-1.5">
-                    {sortedRelevantActions.length === 0 && (
+                    {sortedRelevantActions.length === 0 && !quickSearch && (
                       <p className="text-ink-muted text-sm text-center py-2">{t('quick.no-actions')}</p>
+                    )}
+                    {quickSearch && filteredActions.length === 0 && (
+                      <p className="text-ink-muted text-sm text-center py-2">No results for &ldquo;{quickSearch}&rdquo;</p>
                     )}
                     {displayedActions.map(action => {
                       const icon = store.categories.find(c => c.id === action.categoryId)?.icon ?? (action.isDeduction ? '⚠️' : '⭐')
@@ -650,10 +685,34 @@ export default function ParentDashboard() {
                   <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-1">
                     {t('quick.choose-reward')}
                   </p>
+
+                  {/* Search rewards */}
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm pointer-events-none">🔍</span>
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={quickSearch}
+                      onChange={e => setQuickSearch(e.target.value)}
+                      className="w-full rounded-xl border-2 border-line pl-9 pr-8 py-2 text-sm text-ink-primary outline-none focus:border-brand"
+                    />
+                    {quickSearch && (
+                      <button
+                        onClick={() => setQuickSearch('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink-secondary text-sm"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
                   {sortedRewards.length === 0 ? (
                     <p className="text-ink-muted text-sm text-center py-4">{t('quick.no-rewards')}</p>
                   ) : (
                     <>
+                      {quickSearch && filteredRewards.length === 0 && (
+                        <p className="text-ink-muted text-sm text-center py-2">No results for &ldquo;{quickSearch}&rdquo;</p>
+                      )}
                       {displayedRewards.map(reward => {
                         const canAfford = kidBalance >= reward.pointsCost
                         return (
