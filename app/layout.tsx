@@ -4,6 +4,7 @@ import './globals.css'
 import { FamilyProvider } from '@/context/FamilyContext'
 import { LocaleProvider } from '@/context/LocaleContext'
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration'
+import { Analytics } from '@vercel/analytics/next'
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -41,6 +42,7 @@ export default function RootLayout({
           <FamilyProvider>{children}</FamilyProvider>
         </LocaleProvider>
         <ServiceWorkerRegistration />
+        <Analytics />
       </body>
     </html>
   )
