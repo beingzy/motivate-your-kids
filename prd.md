@@ -628,3 +628,55 @@ Original feedback in Chinese; translated and interpreted below.
 |----|---------|----------|--------|--------|
 | FB-8 | Direct number input | High | S | v1.2 |
 | FB-9 | Home page per-kid layout | High | M | v1.2 |
+
+---
+
+### Round 5 — Backend & Invite System (Mar 2026)
+
+#### Infrastructure Upgrade
+
+Migrate from localStorage-only to a full backend stack:
+
+| Layer | Choice |
+|-------|--------|
+| Database | Supabase (PostgreSQL + RLS) |
+| Auth | Supabase Auth (Google OAuth + email/password) |
+| Email | Resend |
+| Deployment | Vercel |
+
+#### FB-10 · Invite Family Member *(High priority)*
+
+**Requirements:**
+- First parent (family owner) can create invite links from Settings > Family Members.
+- Invite link contains a unique token and expires after **24 hours**.
+- Invite can optionally include an email address — if provided, an invite email is sent via Resend.
+- Invitee opens link → signs up / logs in → configures their **role** (relationship to kids).
+- Available relationships: Mother, Father, Grandma, Grandpa, Aunt, Uncle, Other.
+- Invited members get full parent-level access (same CRUD as owner) once accepted.
+- Settings page shows current family members and pending invites.
+
+**Data model additions:**
+```
+FamilyMember  { id, familyId, userId, email, displayName, relationship, isOwner, joinedAt }
+Invite        { id, familyId, invitedBy, email?, token, relationship, status, createdAt, expiresAt, acceptedAt? }
+```
+
+**New routes:**
+- `/login` — Email/password login
+- `/signup` — Account creation
+- `/invite?token=xxx` — Accept invite flow (auth → role config → join)
+- `/api/invite` — Create invite (POST) / validate invite (GET)
+- `/api/invite/accept` — Accept invite (POST)
+- `/auth/callback` — Supabase auth code exchange
+
+**Auth methods:**
+- **Google OAuth** — primary, lowest-friction sign-in. Uses `supabase.auth.signInWithOAuth({ provider: 'google' })`. Supabase auto-creates the account on first Google login.
+- **Email/password** — fallback for users without Google accounts. Requires email confirmation via Supabase Auth.
+- Both methods share the same `/auth/callback` route for code exchange.
+
+**Prerequisites (Supabase dashboard):**
+- Enable Google provider in Auth > Providers > Google
+- Add Google OAuth client ID + secret from Google Cloud Console
+- Add production URL to Auth > URL Configuration > Redirect URLs
+
+**RLS policies:** All data tables scoped to family membership via `user_family_ids()` helper function.
