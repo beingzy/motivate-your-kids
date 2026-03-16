@@ -156,7 +156,7 @@ export function AvatarPicker({ value, onChange, uploadPrefix = 'avatars' }: Avat
 
       {/* Presets grid */}
       {tab === 'presets' && (
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-6 gap-2">
           {PRESET_AVATARS.map(name => {
             const presetValue = `preset:${name}`
             return (
@@ -164,7 +164,7 @@ export function AvatarPicker({ value, onChange, uploadPrefix = 'avatars' }: Avat
                 key={name}
                 type="button"
                 onClick={() => onChange(presetValue)}
-                className={`w-12 h-12 rounded-full overflow-hidden transition-all mx-auto ${
+                className={`w-11 h-11 rounded-full overflow-hidden transition-all mx-auto ${
                   value === presetValue
                     ? 'ring-2 ring-brand scale-110'
                     : 'hover:scale-105'
@@ -176,7 +176,6 @@ export function AvatarPicker({ value, onChange, uploadPrefix = 'avatars' }: Avat
                   alt={name}
                   className="w-full h-full object-cover bg-page"
                   onError={(e) => {
-                    // Show placeholder if SVG not yet provided
                     const el = e.target as HTMLImageElement
                     el.style.display = 'none'
                   }}
@@ -184,9 +183,6 @@ export function AvatarPicker({ value, onChange, uploadPrefix = 'avatars' }: Avat
               </button>
             )
           })}
-          <p className="col-span-5 text-xs text-ink-muted text-center mt-1">
-            More preset avatars coming soon!
-          </p>
         </div>
       )}
 
