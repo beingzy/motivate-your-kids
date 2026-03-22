@@ -13,6 +13,7 @@ export const DEFAULT_STORE: AppStore = {
   kidBadges: [],
   familyMembers: [],
   familyInvites: [],
+  joinRequests: [],
 }
 
 export function loadStore(): AppStore {

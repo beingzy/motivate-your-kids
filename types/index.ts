@@ -6,6 +6,10 @@ export type TransactionStatus = 'approved' | 'pending' | 'denied'
 export interface Family {
   id: string
   name: string
+  /** Short human-readable code for joining (e.g. "SMT-4K2") */
+  displayCode: string
+  /** Member ID of the family owner/admin */
+  ownerId: string
   createdAt: string
 }
 
@@ -99,16 +103,41 @@ export interface FamilyMember {
   avatar: string
   role: FamilyRole
   birthday?: string
+  /** Whether this member is the family owner/admin */
+  isOwner?: boolean
   createdAt: string
 }
+
+export type InviteStatus = 'pending_approval' | 'approved' | 'used'
 
 export interface FamilyInvite {
   id: string
   familyId: string
   token: string
   role: FamilyRole
+  /** Who created this invite */
+  createdBy?: string
+  /** Owner must approve invites created by non-owners */
+  status: InviteStatus
   createdAt: string
   expiresAt: string
+}
+
+export type JoinRequestStatus = 'pending' | 'approved' | 'denied'
+
+export interface JoinRequest {
+  id: string
+  familyId: string
+  /** Name of the person requesting to join */
+  requesterName: string
+  /** Avatar chosen by requester */
+  requesterAvatar: string
+  /** Role they want to fill */
+  requestedRole: FamilyRole
+  /** Birthday (optional) */
+  birthday?: string
+  status: JoinRequestStatus
+  createdAt: string
 }
 
 // ── Persisted store shape ─────────────────────────────────────────────────────
@@ -124,4 +153,5 @@ export interface AppStore {
   kidBadges: KidBadge[]
   familyMembers: FamilyMember[]
   familyInvites: FamilyInvite[]
+  joinRequests: JoinRequest[]
 }

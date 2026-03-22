@@ -12,6 +12,7 @@ import { randomEarnPhrase, randomDeductPhrase } from '@/lib/messages'
 import { playEarnSound, playDeductSound, playRedeemSound } from '@/lib/sounds'
 import { AvatarDisplay } from '@/components/AvatarDisplay'
 import { FloatingStarLabel } from '@/components/FloatingStarLabel'
+import { DailyPointsChart } from '@/components/DailyPointsChart'
 import { PhotoCapture } from '@/components/PhotoCapture'
 import { VoiceRecorder } from '@/components/VoiceRecorder'
 import type { Transaction } from '@/types'
@@ -454,6 +455,11 @@ export default function ParentDashboard() {
                 </div>
               )
             })}
+          </div>
+
+          {/* Daily points chart */}
+          <div className="px-4 mb-4">
+            <DailyPointsChart transactions={store.transactions} kids={store.kids} />
           </div>
 
           {/* Activity feed */}

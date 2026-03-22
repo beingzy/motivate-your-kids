@@ -22,9 +22,10 @@ import type {
   FamilyMember,
   FamilyInvite,
   FamilyRole,
+  JoinRequest,
 } from '@/types'
 import { loadStore, saveStore, DEFAULT_STORE } from '@/lib/store'
-import { generateId } from '@/lib/ids'
+import { generateId, generateFamilyCode } from '@/lib/ids'
 import { SEED_CATEGORIES, SEED_ACTIONS } from '@/lib/seeds'
 import {
   getKidBalance,
@@ -64,7 +65,13 @@ type StoreAction =
   | { type: 'UPDATE_FAMILY_MEMBER'; payload: FamilyMember }
   | { type: 'REMOVE_FAMILY_MEMBER'; payload: string }
   | { type: 'ADD_FAMILY_INVITE'; payload: FamilyInvite }
+  | { type: 'UPDATE_FAMILY_INVITE'; payload: FamilyInvite }
   | { type: 'REMOVE_FAMILY_INVITE'; payload: string }
+  | { type: 'ADD_JOIN_REQUEST'; payload: JoinRequest }
+  | { type: 'UPDATE_JOIN_REQUEST'; payload: JoinRequest }
+  | { type: 'REMOVE_JOIN_REQUEST'; payload: string }
+  | { type: 'UPDATE_FAMILY'; payload: Family }
+  | { type: 'TRANSFER_OWNERSHIP'; payload: { newOwnerId: string } }
 
 // ── Reducer ───────────────────────────────────────────────────────────────────
 
@@ -198,8 +205,45 @@ function reducer(state: AppStore, action: StoreAction): AppStore {
     case 'ADD_FAMILY_INVITE':
       return { ...state, familyInvites: [...state.familyInvites, action.payload] }
 
+    case 'UPDATE_FAMILY_INVITE':
+      return {
+        ...state,
+        familyInvites: state.familyInvites.map(i =>
+          i.id === action.payload.id ? action.payload : i,
+        ),
+      }
+
     case 'REMOVE_FAMILY_INVITE':
       return { ...state, familyInvites: state.familyInvites.filter(i => i.id !== action.payload) }
+
+    case 'ADD_JOIN_REQUEST':
+      return { ...state, joinRequests: [...state.joinRequests, action.payload] }
+
+    case 'UPDATE_JOIN_REQUEST':
+      return {
+        ...state,
+        joinRequests: state.joinRequests.map(r =>
+          r.id === action.payload.id ? action.payload : r,
+        ),
+      }
+
+    case 'REMOVE_JOIN_REQUEST':
+      return { ...state, joinRequests: state.joinRequests.filter(r => r.id !== action.payload) }
+
+    case 'UPDATE_FAMILY':
+      return { ...state, family: action.payload }
+
+    case 'TRANSFER_OWNERSHIP': {
+      const newOwnerId = action.payload.newOwnerId
+      return {
+        ...state,
+        family: state.family ? { ...state.family, ownerId: newOwnerId } : state.family,
+        familyMembers: state.familyMembers.map(m => ({
+          ...m,
+          isOwner: m.id === newOwnerId,
+        })),
+      }
+    }
 
     default:
       return state
@@ -213,7 +257,7 @@ interface FamilyContextValue {
   hydrated: boolean
 
   // Family
-  createFamily: (name: string) => void
+  createFamily: (name: string, ownerName?: string, ownerAvatar?: string, ownerRole?: FamilyRole) => void
   updateFamilyName: (name: string) => void
 
   // Kids
@@ -258,7 +302,17 @@ interface FamilyContextValue {
   updateFamilyMember: (member: FamilyMember) => void
   removeFamilyMember: (memberId: string) => void
   createFamilyInvite: (role: FamilyRole) => FamilyInvite
+  approveInvite: (inviteId: string) => void
   removeFamilyInvite: (inviteId: string) => void
+  transferOwnership: (newOwnerId: string) => void
+
+  // Join requests
+  createJoinRequest: (data: Omit<JoinRequest, 'id' | 'familyId' | 'status' | 'createdAt'>) => void
+  approveJoinRequest: (requestId: string) => void
+  denyJoinRequest: (requestId: string) => void
+
+  // Helpers
+  isOwner: (memberId?: string) => boolean
 
   // Kid badges
   awardBadge: (kidId: string, badgeId: string) => void
@@ -295,9 +349,16 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
 
   // ── Family ────────────────────────────────────────────────────────────────
 
-  const createFamily = useCallback((name: string) => {
+  const createFamily = useCallback((name: string, ownerName?: string, ownerAvatar?: string, ownerRole?: FamilyRole) => {
     const familyId = generateId()
-    const family: Family = { id: familyId, name, createdAt: new Date().toISOString() }
+    const ownerId = generateId()
+    const family: Family = {
+      id: familyId,
+      name,
+      displayCode: generateFamilyCode(),
+      ownerId,
+      createdAt: new Date().toISOString(),
+    }
     const categories: Category[] = SEED_CATEGORIES.map(c => ({ ...c, familyId }))
     const actions: Action[] = SEED_ACTIONS.map(a => ({
       ...a,
@@ -305,6 +366,17 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
       familyId,
     }))
     dispatch({ type: 'CREATE_FAMILY', payload: { family, categories, actions } })
+    // Auto-create the owner as first family member
+    const owner: FamilyMember = {
+      id: ownerId,
+      familyId,
+      name: ownerName || 'Parent',
+      avatar: ownerAvatar || '👤',
+      role: ownerRole || 'mother',
+      isOwner: true,
+      createdAt: new Date().toISOString(),
+    }
+    dispatch({ type: 'ADD_FAMILY_MEMBER', payload: owner })
   }, [])
 
   const updateFamilyName = useCallback((name: string) => {
@@ -567,23 +639,94 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
 
   const createFamilyInvite = useCallback(
     (role: FamilyRole): FamilyInvite => {
+      // If creator is the owner, auto-approve; otherwise pending
+      const creatorIsOwner = store.family?.ownerId
+        ? store.familyMembers.some(m => m.id === store.family?.ownerId && m.isOwner)
+        : true // fallback: first member is owner
       const invite: FamilyInvite = {
         id: generateId(),
         familyId: store.family!.id,
         token: Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10),
         role,
+        status: creatorIsOwner ? 'approved' : 'pending_approval',
         createdAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       }
       dispatch({ type: 'ADD_FAMILY_INVITE', payload: invite })
       return invite
     },
-    [store.family],
+    [store.family, store.familyMembers],
   )
+
+  const approveInvite = useCallback((inviteId: string) => {
+    const invite = store.familyInvites.find(i => i.id === inviteId)
+    if (!invite) return
+    dispatch({ type: 'UPDATE_FAMILY_INVITE', payload: { ...invite, status: 'approved' } })
+  }, [store.familyInvites])
 
   const removeFamilyInvite = useCallback((inviteId: string) => {
     dispatch({ type: 'REMOVE_FAMILY_INVITE', payload: inviteId })
   }, [])
+
+  const transferOwnership = useCallback((newOwnerId: string) => {
+    dispatch({ type: 'TRANSFER_OWNERSHIP', payload: { newOwnerId } })
+  }, [])
+
+  // ── Join requests ───────────────────────────────────────────────────────
+
+  const createJoinRequest = useCallback(
+    (data: Omit<JoinRequest, 'id' | 'familyId' | 'status' | 'createdAt'>) => {
+      const request: JoinRequest = {
+        ...data,
+        id: generateId(),
+        familyId: store.family!.id,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      }
+      dispatch({ type: 'ADD_JOIN_REQUEST', payload: request })
+    },
+    [store.family],
+  )
+
+  const approveJoinRequest = useCallback(
+    (requestId: string) => {
+      const request = store.joinRequests.find(r => r.id === requestId)
+      if (!request) return
+      // Mark as approved
+      dispatch({ type: 'UPDATE_JOIN_REQUEST', payload: { ...request, status: 'approved' } })
+      // Auto-create family member from the request
+      const member: FamilyMember = {
+        id: generateId(),
+        familyId: request.familyId,
+        name: request.requesterName,
+        avatar: request.requesterAvatar,
+        role: request.requestedRole,
+        birthday: request.birthday,
+        createdAt: new Date().toISOString(),
+      }
+      dispatch({ type: 'ADD_FAMILY_MEMBER', payload: member })
+    },
+    [store.joinRequests],
+  )
+
+  const denyJoinRequest = useCallback(
+    (requestId: string) => {
+      const request = store.joinRequests.find(r => r.id === requestId)
+      if (!request) return
+      dispatch({ type: 'UPDATE_JOIN_REQUEST', payload: { ...request, status: 'denied' } })
+    },
+    [store.joinRequests],
+  )
+
+  const isOwnerFn = useCallback(
+    (memberId?: string) => {
+      if (!store.family) return false
+      if (memberId) return store.family.ownerId === memberId
+      // Check if any member is owner (for UI guards)
+      return store.familyMembers.some(m => m.isOwner)
+    },
+    [store.family, store.familyMembers],
+  )
 
   // ── Kid badges ────────────────────────────────────────────────────────────
 
@@ -655,7 +798,13 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
     updateFamilyMember,
     removeFamilyMember,
     createFamilyInvite,
+    approveInvite,
     removeFamilyInvite,
+    transferOwnership,
+    createJoinRequest,
+    approveJoinRequest,
+    denyJoinRequest,
+    isOwner: isOwnerFn,
     awardBadge,
     getBalance,
     getPendingCount,

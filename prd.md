@@ -1236,3 +1236,98 @@ Transaction += { photoUrl?: string, voiceMemoUrl?: string }
 - `app/parent/actions/page.tsx` — added memo UI to Quick Log modal
 - `app/parent/page.tsx` — added memo UI to home page quick action sheet, memo indicators in activity feed
 - `lib/i18n.ts` — added `nav.settings` key for en/zh
+
+---
+
+### Round 11 — Family Ownership, Join Flow & Daily Chart (Mar 2026)
+
+---
+
+#### FB-17 · Family Display Code & Identity  *(Completed)*
+
+Each family gets a unique, human-readable 6-character code (e.g. `SMT-4K2`) generated at creation time. This code is:
+- Displayed prominently in the Family Members page
+- Copyable to clipboard
+- Shown during setup after family creation
+- Used by new users to request joining an existing family
+
+**Data model changes:**
+```
+Family += { displayCode: string, ownerId: string }
+```
+
+---
+
+#### FB-18 · Create vs Join Family Flow  *(Completed)*
+
+After signup, users without a family see a choice screen:
+1. **Create a new family** — name the family, become the owner/admin
+2. **Join an existing family** — enter a family code to send a join request
+
+Both paths require a profile setup step first (name, avatar, relationship role).
+
+**Join flow:**
+- User enters the family code → submits join request
+- Family owner sees the request in the Family Members page
+- Owner can approve (auto-creates member) or deny
+- Join request is stored locally as `JoinRequest` entity
+
+**Data model additions:**
+```
+JoinRequest { id, familyId, requesterName, requesterAvatar, requestedRole, birthday?, status, createdAt }
+JoinRequestStatus = 'pending' | 'approved' | 'denied'
+```
+
+---
+
+#### FB-19 · Family Ownership & Admin Controls  *(Completed)*
+
+The first parent who creates the family is the **owner/admin**:
+- Owner badge displayed on their member card
+- Owner can: add/edit/remove members, change relationships, approve join requests, approve invites from non-owners
+- Owner can transfer ownership to another non-kid family member via a two-step confirmation dialog
+- Non-owners can create invite links, but they require owner approval before becoming active
+
+**Invite approval flow:**
+- Non-owner creates invite → status `pending_approval`
+- Owner creates invite → auto-approved
+- Owner sees pending invites in a separate section and can approve or delete
+
+**Data model changes:**
+```
+FamilyMember += { isOwner?: boolean }
+FamilyInvite += { status: 'pending_approval' | 'approved' | 'used', createdBy?: string }
+InviteStatus = 'pending_approval' | 'approved' | 'used'
+```
+
+**Ownership transfer:**
+- Owner selects a non-kid member → confirms twice → ownership moves
+- Old owner loses admin badge, new owner gains it
+- Family.ownerId updated atomically with member isOwner flags
+
+---
+
+#### FB-20 · Daily Points Chart  *(Completed)*
+
+Bar chart on the parent home page showing last 7 days of star activity:
+- **Green bars**: stars earned (brighter green for today)
+- **Red bars**: stars deducted/redeemed (brighter red for today)
+- Summary row: total earned, total deducted, net change
+- Pure HTML/CSS implementation, no chart library
+- Responsive, auto-scales to max value
+
+**Component:** `DailyPointsChart.tsx`
+**Location:** Parent home page, between kid cards and activity feed
+
+---
+
+#### Files Changed (Round 11)
+
+- `types/index.ts` — added `displayCode`, `ownerId` to Family; `isOwner` to FamilyMember; `InviteStatus`, `JoinRequest`, `JoinRequestStatus` types; `joinRequests` to AppStore
+- `lib/ids.ts` — added `generateFamilyCode()` for short readable codes
+- `lib/store.ts` — added `joinRequests: []` to DEFAULT_STORE
+- `context/FamilyContext.tsx` — updated `createFamily` with owner/code generation; added join request CRUD, invite approval, ownership transfer; new reducer cases
+- `app/setup/page.tsx` — redesigned: choice screen (create/join), profile setup, join-by-code flow, family code display
+- `app/parent/family/page.tsx` — added family code card, join request approval section, invite approval section, owner badge, transfer ownership, owner-only edit/remove guards
+- `components/DailyPointsChart.tsx` — new 7-day bar chart component
+- `app/parent/page.tsx` — added DailyPointsChart to home page
