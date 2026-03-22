@@ -967,3 +967,35 @@ Kid  { ..., avatarFrame?: string }
 - Companion illustrations (plant stages × moods, animal stages × moods) — need SVG or Lottie assets.
 - Avatar frame SVGs — 7 decorative frame designs.
 - All visual assets to be designed in the `.pen` design file or sourced from Figma before implementation.
+
+---
+
+### Deployment Decision — Mar 2026
+
+**Live production URL:** https://kids.motivationlabs.ai
+
+**Current live version:** Trust-based v1 (localStorage, no auth required)
+
+The Supabase auth layer (Rounds 5–6: Google OAuth, email/password, OTP, invite system) was built and tested but **removed from the production deployment**. Reason: Google OAuth required Supabase project configuration that was not complete, causing the live app to return 500 errors on all routes (middleware auth check failed). Rather than block focus-group testing, the auth middleware was stripped to a passthrough so the core reward loop is immediately usable without sign-in.
+
+**What is live:**
+- Full star economy (earn / deduct / redeem)
+- Avatar system with 30 Figma preset avatars
+- Avatar frames (7 tiers, lifetime-star unlocks)
+- Animation & sound feedback (FB-14/FB-16)
+- All parent management screens (actions, rewards, badges, kids, history, approvals)
+- Kid dashboards with badges and rewards
+- Trust-based role selection (no login)
+- Data stored in localStorage (single device)
+
+**What is deferred (not live):**
+- Supabase auth (Google OAuth, OTP, magic link)
+- Multi-device sync
+- Invite / family member management
+- Photo avatar upload (Supabase Storage)
+
+**Re-enabling auth (v2 plan):**
+1. Configure Google OAuth in Supabase dashboard with correct redirect URLs
+2. Verify `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` in Vercel env
+3. Restore middleware auth enforcement (already in git history on `develop` branch)
+4. Test invite flow end-to-end before re-deploying
