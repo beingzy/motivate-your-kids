@@ -970,35 +970,97 @@ Kid  { ..., avatarFrame?: string }
 
 ---
 
+### Round 9 — Account Setup & Auth (Mar 2026)
+
+Email + password authentication with OTP email verification and a connected family creation wizard.
+
+---
+
+#### Auth Flow (implemented)
+
+```
+/signup              Email + password form (phone tab visible but disabled)
+  ↓ signUp()         Supabase creates account, sends confirmation email with OTP
+/signup/verify       User enters 6-digit code from email
+  ↓ verifyOtp()      Confirms email, signs user in
+/                    Role selection (→ /setup if no family data yet)
+/setup               Existing family creation wizard (unchanged)
+/parent              Parent dashboard
+```
+
+Login flow:
+```
+/login               Email + password → signInWithPassword() → /
+```
+
+Middleware enforces auth on all routes except `/login`, `/signup`, `/signup/verify`, `/auth/callback`.
+
+---
+
+#### Supabase Email Template — Required Configuration
+
+For 6-digit OTP codes (instead of magic links), the "Confirm signup" email template in Supabase dashboard must be updated:
+
+**Auth > Email Templates > Confirm signup** — replace the default body with:
+
+```html
+<h2>Confirm your email</h2>
+<p>Your verification code for Kids Rewards:</p>
+<h1 style="letter-spacing: 0.3em; font-size: 2em;">{{ .Token }}</h1>
+<p>This code expires in 1 hour.</p>
+<p>Or <a href="{{ .ConfirmationURL }}">click here</a> to confirm automatically.</p>
+```
+
+The `{{ .Token }}` variable is the 6-digit OTP. The `{{ .ConfirmationURL }}` fallback link redirects to `/auth/callback` which exchanges the code for a session.
+
+**Auth > URL Configuration:**
+- Site URL: `https://kids.motivationlabs.ai`
+- Redirect URLs: add `https://kids.motivationlabs.ai/auth/callback`
+
+---
+
+#### Pages Built
+
+| Route | Purpose |
+|-------|---------|
+| `/login` | Email + password sign-in. Error messages are user-friendly (not raw Supabase). Redirect param preserved so users land where they tried to go. |
+| `/signup` | Email + password account creation. Phone tab shown but disabled with "Soon" badge. Password must be 8+ chars; confirm field shows red border on mismatch. |
+| `/signup/verify` | 6-digit numeric OTP input. Large centered input with letter-spacing for readability. Resend code button. Both verify (`verifyOtp`) and resend (`auth.resend`) wired to Supabase. Magic-link fallback via `/auth/callback`. |
+| `/auth/callback` | Server-side route that exchanges Supabase `code` param for a session cookie, then redirects to `/`. |
+
+---
+
+#### Design
+
+- Consistent with app palette: warm cream background (`bg-page`), amber brand colour, Nunito font, rounded-3xl card
+- Mobile-first (max-w-sm, full-screen layout)
+- OTP input: large text (3xl), letter-spacing 0.4em, numeric keyboard on mobile
+- All three pages captured in `tests/auth-screens/` (7 screenshots)
+
+---
+
 ### Deployment Decision — Mar 2026
 
 **Live production URL:** https://kids.motivationlabs.ai
 
-**Current live version:** Trust-based v1 (localStorage, no auth required)
-
-The Supabase auth layer (Rounds 5–6: Google OAuth, email/password, OTP, invite system) was built and tested but **removed from the production deployment**. Reason: Google OAuth required Supabase project configuration that was not complete, causing the live app to return 500 errors on all routes (middleware auth check failed). Rather than block focus-group testing, the auth middleware was stripped to a passthrough so the core reward loop is immediately usable without sign-in.
+**Current live version:** Email + password auth with OTP verification (v1.5)
 
 **What is live:**
+- Email + password signup with OTP email verification (Round 9)
+- Family creation wizard after first login
 - Full star economy (earn / deduct / redeem)
 - Avatar system with 30 Figma preset avatars
 - Avatar frames (7 tiers, lifetime-star unlocks)
-- Animation & sound feedback (FB-14/FB-16)
-- All parent management screens (actions, rewards, badges, kids, history, approvals)
+- Animation & sound feedback
+- All parent management screens
 - Kid dashboards with badges and rewards
-- Trust-based role selection (no login)
-- Data stored in localStorage (single device)
+- Data stored in localStorage (single device; multi-device sync planned for v2)
 
-**What is deferred (not live):**
-- Supabase auth (Google OAuth, OTP, magic link)
-- Multi-device sync
+**What is deferred:**
+- Google OAuth / social login
+- Multi-device sync (Supabase DB write-through)
 - Invite / family member management
-- Photo avatar upload (Supabase Storage)
-
-**Re-enabling auth (v2 plan):**
-1. Configure Google OAuth in Supabase dashboard with correct redirect URLs
-2. Verify `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` in Vercel env
-3. Restore middleware auth enforcement (already in git history on `develop` branch)
-4. Test invite flow end-to-end before re-deploying
+- Photo avatar upload
 
 ---
 
