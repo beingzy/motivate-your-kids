@@ -5,6 +5,8 @@ export type TransactionStatus = 'approved' | 'pending' | 'denied'
 
 export interface Family {
   id: string
+  /** Unique numeric-style family ID for display (e.g. "100234") */
+  uid: string
   name: string
   /** Short human-readable code for joining (e.g. "SMT-4K2") */
   displayCode: string
@@ -95,6 +97,7 @@ export interface KidBadge {
 }
 
 export type FamilyRole = 'mother' | 'father' | 'grandma' | 'grandpa' | 'aunt' | 'uncle' | 'nanny' | 'other'
+export type Gender = 'male' | 'female' | 'other' | 'prefer_not_to_say'
 
 export interface FamilyMember {
   id: string
@@ -102,7 +105,10 @@ export interface FamilyMember {
   name: string
   avatar: string
   role: FamilyRole
+  gender?: Gender
   birthday?: string
+  /** ISO timestamp of last birthday update (enforce once per year) */
+  birthdayUpdatedAt?: string
   /** Whether this member is the family owner/admin */
   isOwner?: boolean
   createdAt: string
@@ -140,6 +146,15 @@ export interface JoinRequest {
   createdAt: string
 }
 
+export interface ProfileChangeRequest {
+  id: string
+  memberId: string
+  /** Partial member data to apply if approved */
+  changes: Partial<Pick<FamilyMember, 'avatar' | 'birthday' | 'gender' | 'role' | 'name'>>
+  status: 'pending' | 'approved' | 'denied'
+  createdAt: string
+}
+
 // ── Persisted store shape ─────────────────────────────────────────────────────
 
 export interface AppStore {
@@ -154,4 +169,5 @@ export interface AppStore {
   familyMembers: FamilyMember[]
   familyInvites: FamilyInvite[]
   joinRequests: JoinRequest[]
+  profileChangeRequests: ProfileChangeRequest[]
 }

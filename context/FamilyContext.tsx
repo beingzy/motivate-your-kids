@@ -23,9 +23,11 @@ import type {
   FamilyInvite,
   FamilyRole,
   JoinRequest,
+  ProfileChangeRequest,
+  Gender,
 } from '@/types'
 import { loadStore, saveStore, DEFAULT_STORE } from '@/lib/store'
-import { generateId, generateFamilyCode } from '@/lib/ids'
+import { generateId, generateFamilyCode, generateUid } from '@/lib/ids'
 import { SEED_CATEGORIES, SEED_ACTIONS } from '@/lib/seeds'
 import {
   getKidBalance,
@@ -72,6 +74,9 @@ type StoreAction =
   | { type: 'REMOVE_JOIN_REQUEST'; payload: string }
   | { type: 'UPDATE_FAMILY'; payload: Family }
   | { type: 'TRANSFER_OWNERSHIP'; payload: { newOwnerId: string } }
+  | { type: 'ADD_PROFILE_CHANGE_REQUEST'; payload: ProfileChangeRequest }
+  | { type: 'UPDATE_PROFILE_CHANGE_REQUEST'; payload: ProfileChangeRequest }
+  | { type: 'REMOVE_PROFILE_CHANGE_REQUEST'; payload: string }
 
 // ── Reducer ───────────────────────────────────────────────────────────────────
 
@@ -245,6 +250,20 @@ function reducer(state: AppStore, action: StoreAction): AppStore {
       }
     }
 
+    case 'ADD_PROFILE_CHANGE_REQUEST':
+      return { ...state, profileChangeRequests: [...state.profileChangeRequests, action.payload] }
+
+    case 'UPDATE_PROFILE_CHANGE_REQUEST':
+      return {
+        ...state,
+        profileChangeRequests: state.profileChangeRequests.map(r =>
+          r.id === action.payload.id ? action.payload : r,
+        ),
+      }
+
+    case 'REMOVE_PROFILE_CHANGE_REQUEST':
+      return { ...state, profileChangeRequests: state.profileChangeRequests.filter(r => r.id !== action.payload) }
+
     default:
       return state
   }
@@ -311,6 +330,11 @@ interface FamilyContextValue {
   approveJoinRequest: (requestId: string) => void
   denyJoinRequest: (requestId: string) => void
 
+  // Profile change requests
+  requestProfileChange: (memberId: string, changes: Partial<Pick<FamilyMember, 'avatar' | 'birthday' | 'gender' | 'role' | 'name'>>) => void
+  approveProfileChange: (requestId: string) => void
+  denyProfileChange: (requestId: string) => void
+
   // Helpers
   isOwner: (memberId?: string) => boolean
 
@@ -354,6 +378,7 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
     const ownerId = generateId()
     const family: Family = {
       id: familyId,
+      uid: generateUid(),
       name,
       displayCode: generateFamilyCode(),
       ownerId,
@@ -718,6 +743,60 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
     [store.joinRequests],
   )
 
+  // ── Profile change requests ──────────────────────────────────────────────
+
+  const requestProfileChange = useCallback(
+    (memberId: string, changes: Partial<Pick<FamilyMember, 'avatar' | 'birthday' | 'gender' | 'role' | 'name'>>) => {
+      const member = store.familyMembers.find(m => m.id === memberId)
+      if (!member) return
+      // If this member is the owner, apply directly (no approval needed)
+      if (member.isOwner) {
+        const updated = { ...member, ...changes }
+        if (changes.birthday) {
+          updated.birthdayUpdatedAt = new Date().toISOString()
+        }
+        dispatch({ type: 'UPDATE_FAMILY_MEMBER', payload: updated })
+        return
+      }
+      // Non-owner: create a pending request
+      const request: ProfileChangeRequest = {
+        id: generateId(),
+        memberId,
+        changes,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      }
+      dispatch({ type: 'ADD_PROFILE_CHANGE_REQUEST', payload: request })
+    },
+    [store.familyMembers],
+  )
+
+  const approveProfileChange = useCallback(
+    (requestId: string) => {
+      const request = store.profileChangeRequests.find(r => r.id === requestId)
+      if (!request) return
+      const member = store.familyMembers.find(m => m.id === request.memberId)
+      if (!member) return
+      // Apply changes
+      const updated = { ...member, ...request.changes }
+      if (request.changes.birthday) {
+        updated.birthdayUpdatedAt = new Date().toISOString()
+      }
+      dispatch({ type: 'UPDATE_FAMILY_MEMBER', payload: updated })
+      dispatch({ type: 'UPDATE_PROFILE_CHANGE_REQUEST', payload: { ...request, status: 'approved' } })
+    },
+    [store.profileChangeRequests, store.familyMembers],
+  )
+
+  const denyProfileChange = useCallback(
+    (requestId: string) => {
+      const request = store.profileChangeRequests.find(r => r.id === requestId)
+      if (!request) return
+      dispatch({ type: 'UPDATE_PROFILE_CHANGE_REQUEST', payload: { ...request, status: 'denied' } })
+    },
+    [store.profileChangeRequests],
+  )
+
   const isOwnerFn = useCallback(
     (memberId?: string) => {
       if (!store.family) return false
@@ -804,6 +883,9 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
     createJoinRequest,
     approveJoinRequest,
     denyJoinRequest,
+    requestProfileChange,
+    approveProfileChange,
+    denyProfileChange,
     isOwner: isOwnerFn,
     awardBadge,
     getBalance,

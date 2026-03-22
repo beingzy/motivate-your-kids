@@ -14,6 +14,7 @@ export const DEFAULT_STORE: AppStore = {
   familyMembers: [],
   familyInvites: [],
   joinRequests: [],
+  profileChangeRequests: [],
 }
 
 export function loadStore(): AppStore {
