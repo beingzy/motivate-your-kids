@@ -35,8 +35,12 @@ export async function middleware(request: NextRequest) {
   try {
     const { data } = await supabase.auth.getUser()
     user = data.user
-  } catch {
+  } catch (err) {
     // Supabase unreachable — treat as unauthenticated
+    console.error('[auth] middleware_session_error', {
+      path: request.nextUrl.pathname,
+      error: err instanceof Error ? err.message : 'unknown',
+    })
   }
 
   const { pathname } = request.nextUrl
@@ -49,6 +53,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api')
 
   if (!user && !isPublic) {
+    console.log('[auth] middleware_redirect_login', { path: pathname })
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('redirect', pathname)

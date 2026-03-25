@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 40 33% 96%;
+  --foreground: 215 28% 17%;
+  --primary: 17 80% 54%;
+  --primary-foreground: 0 0% 100%;
+  --radius: 0.75rem;
+}
+
+body {
+  font-family: 'Nunito', system-ui, sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}

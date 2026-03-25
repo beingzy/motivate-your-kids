@@ -1,0 +1,138 @@
+import { StyleSheet } from 'react-native'
+import { colors } from './theme'
+
+export const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    backgroundColor: colors.page,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  logo: {
+    fontSize: 64,
+    marginBottom: 12,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.inkPrimary,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: colors.inkSecondary,
+    marginTop: 4,
+    marginBottom: 32,
+  },
+  card: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.inkSecondary,
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+  input: {
+    width: '100%',
+    borderWidth: 2,
+    borderColor: colors.line,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: colors.inkPrimary,
+  },
+  errorBox: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 16,
+  },
+  errorText: {
+    color: colors.red,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  infoBox: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 16,
+  },
+  infoText: {
+    color: colors.blue,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  successBox: {
+    backgroundColor: '#ECFDF5',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 16,
+  },
+  successText: {
+    color: colors.green,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  button: {
+    width: '100%',
+    backgroundColor: colors.brand,
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 20,
+    shadowColor: colors.brand,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  buttonSecondary: {
+    width: '100%',
+    borderWidth: 2,
+    borderColor: colors.line,
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  buttonSecondaryText: {
+    color: colors.inkPrimary,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  footer: {
+    flexDirection: 'row',
+    marginTop: 24,
+    alignItems: 'center',
+  },
+  footerText: {
+    color: colors.inkSecondary,
+    fontSize: 14,
+  },
+  footerLink: {
+    color: colors.brand,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+})

@@ -22,7 +22,7 @@ multiple caregivers managing the same children.
 
 ## Non-Goals (v1)
 
-- Native mobile app (planned for v3)
+- Native mobile app — iOS via Capacitor planned for v2.5 (see `ios-mobile-build.md`)
 - Server-side backend or multi-device sync (planned for v2)
 - Multi-parent / multi-device support (planned for v2)
 - Social / sharing features
@@ -274,7 +274,178 @@ screen.
 |---------|-------|
 | v1 (current) | Web PWA, localStorage, trust-based auth, core reward loop |
 | v2 | Backend (Supabase), multi-device sync, multi-parent, recurring actions, push notifications, data export |
-| v3 | Native iOS + Android app, AI-suggested actions, streaks, streak multipliers |
+| v2.5 | Monorepo migration, Capacitor iOS build, App Store launch |
+| v3 | Marketing website, docs site, Android app, AI-suggested actions, streaks |
+| v4 | React Native rewrite (if needed), advanced gamification, social features |
+
+---
+
+## Monorepo Codebase Structure
+
+The project is evolving from a single Next.js app into a multi-platform product. This
+section defines the target monorepo structure that houses: the marketing website,
+documentation site, PWA (current app), iOS native app, and Android app (future).
+
+### Package Manager & Tooling
+
+| Tool | Purpose |
+|------|---------|
+| **pnpm workspaces** | Monorepo package management (faster, disk-efficient) |
+| **Turborepo** | Build orchestration, caching, task pipelines |
+| **TypeScript** | Shared across all packages (strict mode) |
+| **ESLint + Prettier** | Unified lint/format config at root |
+
+### Directory Layout
+
+```
+motivate-your-kids/
+├── apps/
+│   ├── web/                    # Current Next.js PWA (parent + kid dashboards)
+│   │   ├── app/                # Next.js App Router pages
+│   │   ├── components/         # Web-specific UI components
+│   │   ├── context/            # React Context providers
+│   │   ├── public/             # Static assets, sw.js
+│   │   ├── next.config.mjs
+│   │   ├── capacitor.config.ts # Capacitor config (for iOS/Android builds)
+│   │   ├── ios/                # Capacitor iOS project (Xcode)
+│   │   ├── android/            # Capacitor Android project (future)
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   ├── website/                # Marketing / landing page
+│   │   ├── app/                # Next.js App Router
+│   │   │   ├── page.tsx        # Landing page (hero, features, testimonials, CTA)
+│   │   │   ├── pricing/        # Pricing page (if applicable)
+│   │   │   ├── about/          # About / team page
+│   │   │   └── blog/           # Blog (MDX-powered)
+│   │   ├── components/         # Marketing-specific components
+│   │   ├── content/            # MDX blog posts and content
+│   │   ├── next.config.mjs
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   └── docs/                   # Documentation site
+│       ├── app/                # Next.js or Docusaurus/Nextra
+│       │   ├── getting-started/
+│       │   ├── guides/
+│       │   │   ├── parent-guide/
+│       │   │   └── kid-setup/
+│       │   ├── api-reference/  # Supabase schema, webhook docs
+│       │   └── faq/
+│       ├── package.json
+│       └── tsconfig.json
+│
+├── packages/
+│   ├── shared/                 # Shared logic across all apps
+│   │   ├── types/              # TypeScript types (Kid, Action, Reward, Transaction, etc.)
+│   │   │   └── index.ts        # ← current types/index.ts moves here
+│   │   ├── logic/              # Pure business logic
+│   │   │   ├── points.ts       # Point calculation, balance checks
+│   │   │   ├── validation.ts   # Input validation rules
+│   │   │   └── seeds.ts        # ← current lib/seeds.ts
+│   │   ├── i18n/               # Locale dictionaries
+│   │   │   └── index.ts        # ← current lib/i18n.ts
+│   │   ├── constants/          # App-wide constants (roles, categories, limits)
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   ├── ui/                     # Shared UI component library (web only)
+│   │   ├── components/         # ← shadcn/ui components from components/ui/
+│   │   ├── hooks/              # Shared React hooks
+│   │   ├── styles/             # Shared Tailwind presets, design tokens
+│   │   │   ├── tailwind.preset.ts
+│   │   │   └── tokens.css      # CSS custom properties (colors, spacing)
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   ├── supabase/               # Supabase client, migrations, types
+│   │   ├── client.ts           # ← current lib/store.ts
+│   │   ├── migrations/         # SQL migration files
+│   │   ├── seed.sql            # Dev seed data
+│   │   ├── generated/          # Auto-generated TypeScript types from schema
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   └── config/                 # Shared tooling configs
+│       ├── eslint/             # ESLint presets
+│       ├── tsconfig/           # Base tsconfig.json presets
+│       └── tailwind/           # Tailwind base config
+│
+├── turbo.json                  # Turborepo pipeline config
+├── pnpm-workspace.yaml         # Workspace package definitions
+├── package.json                # Root scripts
+├── prd.md                      # This file (stays at root)
+├── ios-mobile-build.md         # iOS build guide
+└── CLAUDE.md                   # AI assistant instructions
+```
+
+### Workspace Configuration
+
+**pnpm-workspace.yaml:**
+```yaml
+packages:
+  - 'apps/*'
+  - 'packages/*'
+```
+
+**turbo.json:**
+```json
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "out/**", "dist/**"]
+    },
+    "dev": { "cache": false, "persistent": true },
+    "lint": { "dependsOn": ["^build"] },
+    "test": { "dependsOn": ["^build"] },
+    "type-check": { "dependsOn": ["^build"] }
+  }
+}
+```
+
+### Package Dependency Graph
+
+```
+apps/web        → packages/shared, packages/ui, packages/supabase
+apps/website    → packages/ui, packages/config
+apps/docs       → packages/config
+packages/ui     → packages/shared (for types)
+packages/supabase → packages/shared (for types)
+```
+
+### Migration Plan (Current → Monorepo)
+
+This is a gradual migration. The app continues to work at every step.
+
+| Phase | What Moves | When |
+|-------|-----------|------|
+| **0 (now)** | Keep current flat structure. Add `ios-mobile-build.md`. Plan only. | v0.2.x |
+| **1** | Extract `packages/shared` (types, i18n, seeds, helpers). Current app imports from it. | v0.3.0 |
+| **2** | Add Capacitor to current app (`ios/` and `android/` dirs inside app root). Ship iOS. | v0.3.x |
+| **3** | Restructure into `apps/web` + `packages/*`. Add Turborepo + pnpm workspaces. | v0.4.0 |
+| **4** | Add `apps/website` (marketing landing page). | v0.5.0 |
+| **5** | Add `apps/docs` (user guides, API reference). | v0.6.0 |
+| **6** | (Optional) Add `apps/mobile` if migrating from Capacitor to React Native. | v1.0+ |
+
+### Platform Build Matrix
+
+| Platform | Build Command | Output | Deploy Target |
+|----------|--------------|--------|---------------|
+| PWA (web) | `pnpm --filter web build` | `.next/` (SSR) or `out/` (static) | Vercel |
+| iOS | `pnpm --filter web build:ios` | Xcode archive → `.ipa` | App Store |
+| Android | `pnpm --filter web build:android` | Gradle → `.aab` | Play Store (future) |
+| Website | `pnpm --filter website build` | `.next/` | Vercel |
+| Docs | `pnpm --filter docs build` | `.next/` or `out/` | Vercel |
+
+### Domain Strategy
+
+| App | Domain |
+|-----|--------|
+| PWA | `app.motivationlabs.ai` |
+| Website | `motivationlabs.ai` (or `www.`) |
+| Docs | `docs.motivationlabs.ai` |
 
 ---
 
@@ -1331,3 +1502,235 @@ Bar chart on the parent home page showing last 7 days of star activity:
 - `app/parent/family/page.tsx` — added family code card, join request approval section, invite approval section, owner badge, transfer ownership, owner-only edit/remove guards
 - `components/DailyPointsChart.tsx` — new 7-day bar chart component
 - `app/parent/page.tsx` — added DailyPointsChart to home page
+
+---
+
+### Round 12 — Settings Page Redesign (Mar 2026)
+
+Consolidate the scattered settings-related pages into a single, unified Settings experience. The current `/parent/more` hub links to 6 separate sub-pages (Kids, Family, Badges, History, Settings, Switch User). This redesign merges the key management features into a tabbed Settings page, simplifying navigation and reducing page jumps.
+
+---
+
+#### Current State Analysis
+
+| Feature | Current Location | Problem |
+|---------|-----------------|---------|
+| Family member management | `/parent/family` (separate page) | Invite links don't encode relationship in URL; no "kick" affordance for removing members |
+| Account & avatar editing | `/parent/settings` (self only), `/parent/kids` (kids) | Scattered — parent edits self in one page, edits kids in another |
+| Badge management | `/parent/badges` (separate page) | Disconnected from settings hub; no issues, just fragmented |
+| Activity history | `/parent/history` (separate page) | Sorted by time but no filtering by transaction type |
+| Language, sound, categories | `/parent/settings` | Mixed with account editing in a long scrollable page |
+
+---
+
+#### FB-21 · Settings Page Redesign  *(High priority)*
+
+**Goal:** Replace the current `/parent/more` hub + `/parent/settings` page with a single `/parent/settings` page that uses a tab/section layout to house all management features.
+
+**Page layout:**
+
+```
+┌─────────────────────────────────┐
+│  Settings                       │
+│  [Family Name] · Family ID      │
+├─────────────────────────────────┤
+│  [Members] [Profiles] [Badges] [History] │  ← horizontal scrollable tab bar
+├─────────────────────────────────┤
+│                                 │
+│  (active tab content)           │
+│                                 │
+├─────────────────────────────────┤
+│  Sign Out                       │
+│  Language · Sound · Danger Zone  │  ← always visible footer section
+└─────────────────────────────────┘
+```
+
+---
+
+##### Tab 1: Members (Family Member Management)
+
+Consolidates current `/parent/family` page functionality with enhancements.
+
+**Features:**
+- **Member list:** Show all family members with avatar, name, role, owner badge. Each row has a "..." menu with Edit / Remove (owner only).
+- **Remove member ("kick"):** Owner can remove any non-owner member with a confirmation dialog. Removes from `familyMembers` array.
+- **Invite by link:** Create invitation links that encode the family UID and pre-selected relationship in the URL path: `{domain}/invite/{family-uid}/{relationship}` (e.g., `kids.motivationlabs.ai/invite/SMT-4K2/grandma`). The invitee opens this link, signs up, and joins with the pre-filled role.
+- **Pending join requests:** Same approval/deny UI as current `/parent/family`.
+- **Pending invite approvals:** Same as current.
+- **Ownership transfer:** Same as current — button at bottom of member list.
+
+**URL-encoded invite link format:**
+```
+https://{domain}/invite/{family-display-code}/{relationship}
+```
+- `relationship` is one of: `mother`, `father`, `grandma`, `grandpa`, `aunt`, `uncle`, `nanny`, `other`
+- When invitee opens the link, the role is pre-selected and shown as read-only (or editable if owner prefers)
+- The link also stores a `FamilyInvite` record with the role for server-side validation
+
+---
+
+##### Tab 2: Profiles (Account & Avatar Settings)
+
+Consolidates self-account editing + kid profile management into one place.
+
+**Features:**
+- **My profile card:** Avatar, name, role, gender, birthday — tap "Edit" to open the existing account edit modal (currently in `/parent/settings`).
+- **Kid profiles list:** All kids shown as cards with avatar, name, age (computed from birthday), hobbies. Each has an "Edit" button.
+- **Kid profile editing (parent can edit):**
+  - Avatar (emoji, preset, or photo upload — same `AvatarPicker`)
+  - Name
+  - Birthday → auto-compute and display age
+  - Gender
+  - Hobbies (new field — free-form text or tag chips, e.g., "Drawing, Soccer, Reading")
+  - Avatar frame selection
+- **Add kid:** "+ Add Kid" button at bottom, opens the kid creation form.
+
+**Data model changes:**
+```
+Kid += { hobbies?: string[] }
+```
+
+---
+
+##### Tab 3: Badges (Badge Management)
+
+Moves current `/parent/badges` page content into the settings tab.
+
+**Features:**
+- Grid display of all badges (emoji + name)
+- Create new badge (emoji picker + name + description)
+- Edit / delete existing badges
+- Award badge to a kid (existing functionality)
+- No changes to existing badge logic — this is a relocation, not a redesign
+
+---
+
+##### Tab 4: History (Activity History)
+
+Moves current `/parent/history` page content into the settings tab, with filtering added.
+
+**Features:**
+- **Timeline view:** All transactions sorted by time (newest first), grouped by date — same as current.
+- **Type filter bar:** Horizontal chip row at the top: `All` | `Earned` | `Deducted` | `Redeemed`. Tapping a chip filters the list to that `Transaction.type`. Active chip is highlighted.
+- **Kid filter (optional):** If multiple kids, show a secondary chip row for per-kid filtering.
+- **Memo indicators:** Existing 📷 / 🎙 icons for transactions with photo/voice memos.
+- **Transaction details:** Tapping a transaction expands it inline to show: full reason, memo playback, timestamp.
+
+---
+
+##### Footer Section (Always Visible Below Tabs)
+
+Persists below all tab content — not part of any tab:
+
+- **Sign Out button** — calls `supabase.auth.signOut()`, redirects to `/login`
+- **Language toggle** — EN / 中文 (existing)
+- **Sound toggle** — on/off (existing)
+- **Danger Zone** — collapsible section with data reset (existing)
+
+---
+
+#### Navigation Changes
+
+**Bottom nav:** The Settings tab (`/parent/more`) now points directly to `/parent/settings`.
+
+**Routes to deprecate:**
+- `/parent/more` → redirect to `/parent/settings`
+- `/parent/family` → content moves to Members tab
+- `/parent/badges` → content moves to Badges tab
+- `/parent/history` → content moves to History tab
+
+**Routes to add:**
+- `/invite/[familyCode]/[relationship]` — public invite acceptance page
+
+**ParentNav update:**
+```
+Settings tab: href changes from '/parent/more' to '/parent/settings'
+```
+
+---
+
+#### Priority Matrix (Round 12)
+
+| ID | Feature | Priority | Effort | Target |
+|----|---------|----------|--------|--------|
+| FB-21a | Settings tab layout + Members tab | High | M | v1.6 |
+| FB-21b | Profiles tab (self + kid editing with hobbies) | High | M | v1.6 |
+| FB-21c | Badges tab (relocate) | High | S | v1.6 |
+| FB-21d | History tab (relocate + type filter) | High | S | v1.6 |
+| FB-21e | URL-encoded invite links | High | M | v1.6 |
+| FB-21f | Navigation cleanup (deprecate old routes) | Medium | S | v1.6 |
+
+#### Implementation Order
+
+| # | Feature | Scope |
+|---|---------|-------|
+| 1 | FB-21a | New `/parent/settings` with tab layout, Members tab content |
+| 2 | FB-21b | Profiles tab — merge account edit + kid profiles + add hobbies field |
+| 3 | FB-21c | Badges tab — move badge management into tab |
+| 4 | FB-21d | History tab — move history + add type/kid filters |
+| 5 | FB-21e | `/invite/[familyCode]/[relationship]` route + updated invite link generation |
+| 6 | FB-21f | Update ParentNav, add redirects for old routes, clean up |
+
+---
+
+## Build Queue
+
+### 🔜 Next Up
+
+- [x] **FB-21a: Settings tab layout + Members tab** — Create new tabbed Settings page at `/parent/settings`. Members tab: member list with remove, URL-encoded invite link creation, pending requests.
+  - **User:** Parents (family owner primarily)
+  - **Acceptance Criteria:**
+    - Settings page renders 4 tabs: Members, Profiles, Badges, History
+    - Members tab shows all family members with avatar/name/role
+    - Owner can remove (kick) non-owner members with confirmation
+    - Invite links use format `{domain}/invite/{code}/{relationship}`
+    - Pending join requests and invite approvals shown
+    - Footer section with sign out, language, sound, danger zone always visible
+  - **Technical Notes:** Rewrite `app/parent/settings/page.tsx`. Pull logic from `app/parent/family/page.tsx`.
+  - **Tests Required:** Tab switching, member removal, invite link generation with correct URL format
+
+- [x] **FB-21b: Profiles tab** — Self-profile editing + kid profile management with new hobbies field
+  - **User:** Parents
+  - **Acceptance Criteria:**
+    - Parent can edit own profile (avatar, role, gender, birthday)
+    - Parent can view and edit any kid's profile
+    - Kid profile includes: avatar, name, birthday (with computed age display), gender, hobbies (tag chips), avatar frame
+    - Add new kid from this tab
+  - **Technical Notes:** Add `hobbies?: string[]` to Kid type. Merge account edit modal from current settings page.
+  - **Tests Required:** Kid profile editing, hobbies add/remove, age computation from birthday
+
+- [x] **FB-21c: Badges tab** — Relocate badge management into Settings
+  - **User:** Parents
+  - **Acceptance Criteria:**
+    - Same functionality as current `/parent/badges` page
+    - Create, edit, delete, award badges
+  - **Technical Notes:** Move content from `app/parent/badges/page.tsx` into the Badges tab component.
+  - **Tests Required:** Badge CRUD within new tab context
+
+- [x] **FB-21d: History tab with filters** — Relocate history with type and kid filtering
+  - **User:** Parents
+  - **Acceptance Criteria:**
+    - Transaction list sorted by time (newest first)
+    - Filter chips: All / Earned / Deducted / Redeemed
+    - Optional kid filter when multiple kids exist
+    - Memo indicators (📷 🎙) preserved
+  - **Technical Notes:** Move content from `app/parent/history/page.tsx`. Add filter state.
+  - **Tests Required:** Type filtering, kid filtering, correct transaction count per filter
+
+- [ ] **FB-21e: URL-encoded invite links** — New invite link format and acceptance page
+  - **User:** Invited family members
+  - **Acceptance Criteria:**
+    - Invite links follow `{domain}/invite/{familyCode}/{relationship}` format
+    - Opening link pre-fills relationship role
+    - Invitee can sign up and join with pre-selected role
+  - **Technical Notes:** New route at `app/invite/[familyCode]/[relationship]/page.tsx`. Update `createFamilyInvite` to generate new URL format.
+  - **Tests Required:** Link generation, role pre-fill on invite page, join flow
+
+- [x] **FB-21f: Navigation cleanup** — Update ParentNav, redirect old routes (partial: nav + /parent/more redirect done; /parent/family, /parent/badges, /parent/history still serve original pages)
+  - **User:** All parents
+  - **Acceptance Criteria:**
+    - Bottom nav Settings tab points to `/parent/settings`
+    - `/parent/more` redirects to `/parent/settings`
+    - `/parent/family`, `/parent/badges`, `/parent/history` redirect to `/parent/settings` with correct tab
+  - **Technical Notes:** Update `ParentNav.tsx`, add redirect pages.
+  - **Tests Required:** Navigation links correct, redirects work

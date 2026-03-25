@@ -64,6 +64,10 @@ const en: Dict = {
   // Settings
   'settings.title': 'Settings',
   'settings.family': 'Family',
+  'settings.tab.members': 'Members',
+  'settings.tab.profiles': 'Profiles',
+  'settings.tab.badges': 'Badges',
+  'settings.tab.history': 'History',
   'settings.language': 'Language',
   'settings.lang.en': 'English',
   'settings.lang.zh': '中文（简体）',
@@ -139,6 +143,10 @@ const zh: Dict = {
   // Settings
   'settings.title': '设置',
   'settings.family': '家庭',
+  'settings.tab.members': '成员',
+  'settings.tab.profiles': '档案',
+  'settings.tab.badges': '徽章',
+  'settings.tab.history': '历史',
   'settings.language': '语言',
   'settings.lang.en': 'English',
   'settings.lang.zh': '中文（简体）',

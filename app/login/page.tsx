@@ -28,6 +28,8 @@ function LoginForm() {
     setInfo('')
     setLoading(true)
 
+    console.log('[auth]', JSON.stringify({ event: 'login_attempt' }))
+
     const supabase = createClient()
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
@@ -35,39 +37,54 @@ function LoginForm() {
     })
 
     if (signInError) {
-      // Give a friendly message instead of raw Supabase errors
       const msg = signInError.message.toLowerCase()
+      let friendlyMsg: string
+
       if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('password')) {
-        setError('Incorrect email or password.')
+        friendlyMsg = 'Incorrect email or password.'
       } else if (msg.includes('confirmed') || msg.includes('verified')) {
-        setError(
-          'Please verify your email first. Check your inbox for a confirmation code.',
-        )
+        friendlyMsg = 'Please verify your email first. Check your inbox for a confirmation code.'
       } else {
-        setError(signInError.message)
+        friendlyMsg = signInError.message
       }
+
+      console.error('[auth]', JSON.stringify({
+        event: 'login_failure',
+        error: signInError.message,
+        code: signInError.code ?? 'unknown',
+      }))
+
+      setError(friendlyMsg)
       setLoading(false)
       return
     }
 
+    console.log('[auth]', JSON.stringify({ event: 'login_success' }))
     router.replace(redirectTo)
   }
 
   return (
-    <main className="min-h-screen bg-page flex flex-col items-center justify-center p-6">
+    <main className="min-h-screen flex flex-col items-center justify-center px-5 py-10">
       <div className="w-full max-w-sm">
 
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="text-6xl mb-3">⭐</div>
-          <h1 className="text-2xl font-extrabold text-ink-primary">Kids Rewards</h1>
-          <p className="text-ink-secondary text-sm mt-1">Sign in to your account</p>
+          <h1 className="text-[28px] font-extrabold text-ink-primary leading-tight">
+            Kids Rewards
+          </h1>
+          <p className="text-ink-secondary text-[15px] font-semibold mt-1">
+            Sign in to your account
+          </p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-card p-6 flex flex-col gap-4">
+        {/* Form card */}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-[20px] shadow-card p-4 flex flex-col gap-4"
+        >
           <div>
-            <label className="block text-xs font-bold text-ink-secondary mb-1.5 uppercase tracking-wide">
+            <label className="block text-[11px] font-bold text-ink-muted mb-1.5 uppercase tracking-[1.5px]">
               Email
             </label>
             <input
@@ -77,16 +94,14 @@ function LoginForm() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full rounded-xl border-2 border-line px-4 py-3 text-ink-primary outline-none focus:border-brand transition-colors text-base"
+              className="w-full rounded-[14px] border-2 border-line px-4 py-3 text-ink-primary outline-none focus:border-brand transition-colors text-[15px] font-semibold"
             />
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold text-ink-secondary uppercase tracking-wide">
-                Password
-              </label>
-            </div>
+            <label className="block text-[11px] font-bold text-ink-muted mb-1.5 uppercase tracking-[1.5px]">
+              Password
+            </label>
             <input
               type="password"
               required
@@ -94,18 +109,18 @@ function LoginForm() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="Your password"
-              className="w-full rounded-xl border-2 border-line px-4 py-3 text-ink-primary outline-none focus:border-brand transition-colors text-base"
+              className="w-full rounded-[14px] border-2 border-line px-4 py-3 text-ink-primary outline-none focus:border-brand transition-colors text-[15px] font-semibold"
             />
           </div>
 
           {info && (
-            <p className="text-blue-600 text-sm font-semibold bg-blue-50 rounded-xl px-4 py-3">
+            <p className="text-blue-600 text-sm font-semibold bg-blue-50 rounded-[12px] px-4 py-3">
               {info}
             </p>
           )}
 
           {error && (
-            <p className="text-red-500 text-sm font-semibold bg-red-50 rounded-xl px-4 py-3">
+            <p className="text-red-500 text-sm font-semibold bg-red-50 rounded-[12px] px-4 py-3">
               {error}
             </p>
           )}
@@ -113,7 +128,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading || !email || !password}
-            className="w-full py-4 rounded-2xl bg-brand hover:bg-brand-hover disabled:opacity-50 text-white font-extrabold text-base shadow-brand transition-colors mt-1"
+            className="w-full h-12 rounded-[14px] bg-brand hover:bg-brand-hover disabled:opacity-50 text-white font-extrabold text-[15px] shadow-brand transition-colors mt-1"
           >
             {loading ? 'Signing in…' : 'Sign in →'}
           </button>

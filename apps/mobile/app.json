@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Motivate Your Kids",
+    "slug": "motivate-your-kids",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "mkids",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F8F5F2"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ai.motivationlabs.kids",
+      "usesAppleSignIn": true
+    },
+    "android": {
+      "package": "ai.motivationlabs.kids",
+      "adaptiveIcon": {
+        "backgroundColor": "#F8F5F2",
+        "foregroundImage": "./assets/images/icon.png"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-apple-authentication"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
