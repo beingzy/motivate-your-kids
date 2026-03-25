@@ -8,7 +8,7 @@ const tabs = [
   { href: '/parent', key: 'nav.home', icon: '🏠', exact: true },
   { href: '/parent/actions', key: 'nav.actions', icon: '✅' },
   { href: '/parent/rewards', key: 'nav.rewards', icon: '🎁' },
-  { href: '/parent/more', key: 'nav.settings', icon: '⚙️' },
+  { href: '/parent/settings', key: 'nav.settings', icon: '⚙️' },
 ]
 
 export function ParentNav() {

@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { authLog } from '@/lib/auth-logger'
 
 /**
  * Handles Supabase auth redirects — magic links and email confirmations.
@@ -11,39 +12,51 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
 
-  if (code) {
-    // Pre-initialise response so the setAll cookie callback can attach to it
-    let response = NextResponse.redirect(`${origin}${next}`)
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll()
-          },
-          setAll(cookiesToSet) {
-            // Write to request so subsequent reads in this handler see them
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value),
-            )
-            // Re-create the redirect so we get a fresh Headers object, then
-            // attach every session cookie to it — this is what the browser receives
-            response = NextResponse.redirect(`${origin}${next}`)
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options),
-            )
-          },
-        },
-      },
-    )
-
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      return response  // carries the session cookies to the browser
-    }
+  if (!code) {
+    authLog({ event: 'callback_no_code', detail: 'No code param in callback URL' })
+    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth_failed`)
+  authLog({ event: 'callback_code_exchange' })
+
+  // Pre-initialise response so the setAll cookie callback can attach to it
+  let response = NextResponse.redirect(`${origin}${next}`)
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          // Write to request so subsequent reads in this handler see them
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value),
+          )
+          // Re-create the redirect so we get a fresh Headers object, then
+          // attach every session cookie to it — this is what the browser receives
+          response = NextResponse.redirect(`${origin}${next}`)
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options),
+          )
+        },
+      },
+    },
+  )
+
+  const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+  if (error) {
+    authLog({
+      event: 'callback_failure',
+      error: error.message,
+      detail: `status=${error.status}, code=${error.code ?? 'unknown'}`,
+    })
+    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
+  }
+
+  authLog({ event: 'callback_success' })
+  return response  // carries the session cookies to the browser
 }

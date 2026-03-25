@@ -28,6 +28,12 @@ export interface Kid {
   wishlist?: string[]
   /** Decorative frame around avatar (e.g., "stars", "crown", "rainbow") */
   avatarFrame?: string
+  /** Free-form hobby tags (e.g., ["Drawing", "Soccer"]) */
+  hobbies?: string[]
+  /** Date of birth (YYYY-MM-DD) */
+  birthday?: string
+  /** Gender */
+  gender?: Gender
 }
 
 export interface Category {

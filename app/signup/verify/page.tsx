@@ -22,11 +22,12 @@ function VerifyForm() {
     if (showCodeInput) inputRef.current?.focus()
   }, [showCodeInput])
 
-  // Poll for session — user may have clicked the link in another tab
+  // Listen for session — user may have clicked the email link in another tab
   useEffect(() => {
     const supabase = createClient()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
+        console.log('[auth]', JSON.stringify({ event: 'verify_success', detail: 'via email link' }))
         router.replace('/')
       }
     })
@@ -39,6 +40,8 @@ function VerifyForm() {
     setError('')
     setVerifying(true)
 
+    console.log('[auth]', JSON.stringify({ event: 'verify_attempt', detail: 'otp' }))
+
     const supabase = createClient()
     const { error: verifyError } = await supabase.auth.verifyOtp({
       email,
@@ -47,15 +50,22 @@ function VerifyForm() {
     })
 
     if (verifyError) {
-      setError(
-        verifyError.message.toLowerCase().includes('expired')
-          ? 'Code expired. Click "Resend email" to get a new one.'
-          : 'Invalid code — double-check and try again.',
-      )
+      const friendlyMsg = verifyError.message.toLowerCase().includes('expired')
+        ? 'Code expired. Click "Resend email" to get a new one.'
+        : 'Invalid code — double-check and try again.'
+
+      console.error('[auth]', JSON.stringify({
+        event: 'verify_failure',
+        error: verifyError.message,
+        code: verifyError.code ?? 'unknown',
+      }))
+
+      setError(friendlyMsg)
       setVerifying(false)
       return
     }
 
+    console.log('[auth]', JSON.stringify({ event: 'verify_success', detail: 'otp' }))
     router.replace('/')
   }
 
@@ -64,6 +74,8 @@ function VerifyForm() {
     setResending(true)
     setError('')
     setResendSuccess(false)
+
+    console.log('[auth]', JSON.stringify({ event: 'resend_attempt' }))
 
     const supabase = createClient()
     const { error: resendError } = await supabase.auth.resend({
@@ -74,34 +86,45 @@ function VerifyForm() {
 
     setResending(false)
     if (resendError) {
+      console.error('[auth]', JSON.stringify({
+        event: 'resend_failure',
+        error: resendError.message,
+      }))
       setError('Could not resend — please wait a moment and try again.')
     } else {
+      console.log('[auth]', JSON.stringify({ event: 'resend_success' }))
       setResendSuccess(true)
       setCode('')
     }
   }
 
   return (
-    <main className="min-h-screen bg-page flex flex-col items-center justify-center p-6">
+    <main className="min-h-screen flex flex-col items-center justify-center px-5 py-10">
       <div className="w-full max-w-sm">
 
         {/* Header */}
         <div className="text-center mb-8">
           <div className="text-6xl mb-3">✉️</div>
-          <h1 className="text-2xl font-extrabold text-ink-primary">Check your email</h1>
-          <p className="text-ink-secondary text-sm mt-2 leading-relaxed">
+          <h1 className="text-[28px] font-extrabold text-ink-primary leading-tight">
+            Check your email
+          </h1>
+          <p className="text-ink-secondary text-[15px] font-semibold mt-2 leading-relaxed">
             We sent a confirmation email to
             <br />
             <span className="font-bold text-ink-primary">{email || 'your address'}</span>
           </p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-card p-6 flex flex-col gap-5">
+        <div className="bg-white rounded-[20px] shadow-card p-4 flex flex-col gap-5">
 
           {/* Primary action — click the link */}
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
-            <p className="text-amber-800 font-bold text-sm mb-1">Open your email and click the confirmation link</p>
-            <p className="text-amber-700 text-xs">This page will update automatically once confirmed.</p>
+          <div className="bg-amber-50 border border-amber-200 rounded-[12px] p-4 text-center">
+            <p className="text-amber-800 font-bold text-sm mb-1">
+              Open your email and click the confirmation link
+            </p>
+            <p className="text-amber-700 text-xs">
+              This page will update automatically once confirmed.
+            </p>
           </div>
 
           {/* Divider */}
@@ -123,7 +146,7 @@ function VerifyForm() {
           ) : (
             <form onSubmit={handleVerifyCode} className="flex flex-col gap-4">
               <div>
-                <label className="block text-xs font-bold text-ink-secondary mb-1.5 uppercase tracking-wide">
+                <label className="block text-[11px] font-bold text-ink-muted mb-1.5 uppercase tracking-[1.5px]">
                   Verification code
                 </label>
                 <input
@@ -139,14 +162,14 @@ function VerifyForm() {
                   }}
                   placeholder="000000"
                   maxLength={6}
-                  className={`w-full rounded-xl border-2 px-4 py-4 text-center text-3xl font-extrabold tracking-[0.4em] text-ink-primary outline-none transition-colors ${
+                  className={`w-full rounded-[14px] border-2 px-4 py-4 text-center text-3xl font-extrabold tracking-[0.4em] text-ink-primary outline-none transition-colors ${
                     error ? 'border-red-400' : code.length === 6 ? 'border-brand' : 'border-line focus:border-brand'
                   }`}
                 />
               </div>
 
               {error && (
-                <p className="text-red-500 text-sm font-semibold bg-red-50 rounded-xl px-4 py-3">
+                <p className="text-red-500 text-sm font-semibold bg-red-50 rounded-[12px] px-4 py-3">
                   {error}
                 </p>
               )}
@@ -154,7 +177,7 @@ function VerifyForm() {
               <button
                 type="submit"
                 disabled={verifying || code.length !== 6}
-                className="w-full py-4 rounded-2xl bg-brand hover:bg-brand-hover disabled:opacity-50 text-white font-extrabold text-base shadow-brand transition-colors"
+                className="w-full h-12 rounded-[14px] bg-brand hover:bg-brand-hover disabled:opacity-50 text-white font-extrabold text-[15px] shadow-brand transition-colors"
               >
                 {verifying ? 'Verifying…' : 'Verify & continue →'}
               </button>
@@ -162,7 +185,7 @@ function VerifyForm() {
           )}
 
           {resendSuccess && (
-            <p className="text-green-600 text-sm font-semibold bg-green-50 rounded-xl px-4 py-3 text-center">
+            <p className="text-green-600 text-sm font-semibold bg-green-50 rounded-[12px] px-4 py-3 text-center">
               New email sent! Check your inbox.
             </p>
           )}
