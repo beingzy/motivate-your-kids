@@ -95,6 +95,10 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('Members')
   const [soundEnabled, setSoundEnabled] = useState(() => loadMeta().soundEnabled)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [resetTyped, setResetTyped] = useState('')
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
+  const [catToDelete, setCatToDelete] = useState<Category | null>(null)
+  const [catDeleteError, setCatDeleteError] = useState('')
 
   // Family name editing
   const [editingName, setEditingName] = useState(false)
@@ -135,10 +139,17 @@ export default function SettingsPage() {
   function handleDeleteCategory(cat: Category) {
     const usedByAction = store.actions.some(a => a.categoryId === cat.id)
     if (usedByAction) {
-      alert(`"${cat.name}" is used by one or more actions. Archive those actions first.`)
+      setCatDeleteError(`"${cat.name}" is used by one or more actions. Archive those actions first.`)
+      setTimeout(() => setCatDeleteError(''), 4000)
       return
     }
-    if (confirm(`Remove category "${cat.name}"?`)) removeCategory(cat.id)
+    setCatToDelete(cat)
+  }
+
+  function confirmDeleteCategory() {
+    if (!catToDelete) return
+    removeCategory(catToDelete.id)
+    setCatToDelete(null)
   }
 
   async function handleSignOut() {
@@ -148,6 +159,7 @@ export default function SettingsPage() {
   }
 
   function handleReset() {
+    if (resetTyped !== 'DELETE') return
     clearStore()
     window.location.href = '/setup'
   }
@@ -327,7 +339,7 @@ export default function SettingsPage() {
 
         {/* Sign out */}
         <button
-          onClick={handleSignOut}
+          onClick={() => setShowSignOutConfirm(true)}
           className="w-full py-3 rounded-2xl bg-white shadow-card text-red-500 font-bold hover:bg-red-50 transition-colors border border-line-subtle"
         >
           Sign Out
@@ -338,23 +350,68 @@ export default function SettingsPage() {
           <h2 className="text-sm font-semibold text-red-400 uppercase tracking-wide mb-3">{t('settings.danger')}</h2>
           <p className="text-red-600 text-sm mb-4">{t('settings.danger-description')}</p>
           {!showResetConfirm ? (
-            <button onClick={() => setShowResetConfirm(true)}
+            <button onClick={() => { setShowResetConfirm(true); setResetTyped('') }}
               className="w-full py-3 rounded-2xl bg-red-100 hover:bg-red-200 text-red-600 font-bold transition-colors">
               {t('settings.reset')}
             </button>
           ) : (
             <div className="flex flex-col gap-3">
               <p className="text-red-700 font-bold text-center">{t('settings.reset-confirm')}</p>
-              <button onClick={handleReset}
-                className="w-full py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold transition-colors">
+              <p className="text-red-600 text-xs text-center">Type <span className="font-mono font-bold">DELETE</span> to confirm.</p>
+              <input
+                type="text"
+                value={resetTyped}
+                onChange={e => setResetTyped(e.target.value)}
+                placeholder="Type DELETE"
+                className="w-full rounded-xl border-2 border-red-300 px-4 py-3 text-center text-red-700 font-mono font-bold outline-none focus:border-red-500"
+              />
+              <button onClick={handleReset} disabled={resetTyped !== 'DELETE'}
+                className="w-full py-3 rounded-2xl bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white font-bold transition-colors">
                 {t('settings.reset-yes')}
               </button>
-              <button onClick={() => setShowResetConfirm(false)} className="text-center text-red-400 text-sm">
+              <button onClick={() => { setShowResetConfirm(false); setResetTyped('') }} className="text-center text-red-400 text-sm">
                 Cancel
               </button>
             </div>
           )}
         </section>
+
+        {/* Sign out confirmation modal */}
+        {showSignOutConfirm && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-end" onClick={() => setShowSignOutConfirm(false)}>
+            <div className="bg-white w-full rounded-t-3xl p-6 flex flex-col gap-4 max-w-lg mx-auto" onClick={e => e.stopPropagation()}>
+              <h2 className="text-lg font-bold text-ink-primary text-center">Sign out?</h2>
+              <p className="text-sm text-ink-secondary text-center">Your family data is stored locally on this device and will still be here when you sign back in.</p>
+              <button onClick={handleSignOut}
+                className="w-full py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold transition-colors">
+                Sign Out
+              </button>
+              <button onClick={() => setShowSignOutConfirm(false)} className="text-center text-ink-muted text-sm">Cancel</button>
+            </div>
+          </div>
+        )}
+
+        {/* Category delete confirmation modal */}
+        {catToDelete && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-end" onClick={() => setCatToDelete(null)}>
+            <div className="bg-white w-full rounded-t-3xl p-6 flex flex-col gap-4 max-w-lg mx-auto" onClick={e => e.stopPropagation()}>
+              <h2 className="text-lg font-bold text-ink-primary">Remove &ldquo;{catToDelete.name}&rdquo;?</h2>
+              <p className="text-sm text-ink-secondary">This category will be permanently deleted. Actions in this category will become uncategorised.</p>
+              <button onClick={confirmDeleteCategory}
+                className="w-full py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold transition-colors">
+                Remove Category
+              </button>
+              <button onClick={() => setCatToDelete(null)} className="text-center text-ink-muted text-sm">Cancel</button>
+            </div>
+          </div>
+        )}
+
+        {/* Category error toast */}
+        {catDeleteError && (
+          <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-amber-100 border border-amber-300 text-amber-800 text-sm font-semibold px-5 py-3 rounded-xl shadow-lg">
+            {catDeleteError}
+          </div>
+        )}
       </div>
     </main>
   )
@@ -838,6 +895,8 @@ function ProfilesTab({
   const [showKidForm, setShowKidForm] = useState(false)
   const [editingKid, setEditingKid] = useState<Kid | null>(null)
   const [kidDraft, setKidDraft] = useState({ name: '', avatar: '🧒', colorAccent: KID_COLORS[0], avatarFrame: 'none', birthday: '', gender: '' as Gender | '', hobbies: '' })
+  const [kidToRemove, setKidToRemove] = useState<Kid | null>(null)
+  const [birthdayError, setBirthdayError] = useState('')
 
   function canEditBirthday(): boolean {
     if (!currentMember?.birthdayUpdatedAt) return true
@@ -872,7 +931,7 @@ function ProfilesTab({
         setShowBirthdayConfirm(true)
         return
       }
-      if (!canEditBirthday()) { alert('Birthday can only be updated once per year.'); return }
+      if (!canEditBirthday()) { setBirthdayError('Birthday can only be updated once per year.'); setTimeout(() => setBirthdayError(''), 4000); return }
       changes.birthday = acctBirthday
     }
 
@@ -1039,9 +1098,7 @@ function ProfilesTab({
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
                   <button onClick={() => openKidEdit(kid)} className="text-ink-muted hover:text-ink-secondary text-sm">Edit</button>
-                  <button onClick={() => {
-                    if (confirm(`Remove ${kid.name}? Their history will remain.`)) removeKid(kid.id)
-                  }} className="text-red-300 hover:text-red-500 text-sm">Remove</button>
+                  <button onClick={() => setKidToRemove(kid)} className="text-red-300 hover:text-red-500 text-sm">Remove</button>
                 </div>
               </div>
             ))}
@@ -1209,6 +1266,36 @@ function ProfilesTab({
             </button>
             <button onClick={() => setShowKidForm(false)} className="text-center text-ink-muted text-sm">Cancel</button>
           </div>
+        </div>
+      )}
+
+      {/* Remove kid confirmation modal */}
+      {kidToRemove && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-end" onClick={() => setKidToRemove(null)}>
+          <div className="bg-white w-full rounded-t-3xl p-6 flex flex-col gap-4 max-w-lg mx-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              <AvatarDisplay avatar={kidToRemove.avatar} size={48} frame={kidToRemove.avatarFrame} />
+              <div>
+                <h2 className="text-lg font-bold text-ink-primary">Remove {kidToRemove.name}?</h2>
+                <p className="text-sm text-ink-secondary">⭐ {getBalance(kidToRemove.id)} stars</p>
+              </div>
+            </div>
+            <p className="text-sm text-red-700 bg-red-50 rounded-xl px-4 py-3">
+              {kidToRemove.name}&apos;s profile will be removed. Their transaction history will remain in the log.
+            </p>
+            <button onClick={() => { removeKid(kidToRemove.id); setKidToRemove(null) }}
+              className="w-full py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold transition-colors">
+              Remove {kidToRemove.name}
+            </button>
+            <button onClick={() => setKidToRemove(null)} className="text-center text-ink-muted text-sm">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Birthday error toast */}
+      {birthdayError && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-amber-100 border border-amber-300 text-amber-800 text-sm font-semibold px-5 py-3 rounded-xl shadow-lg">
+          {birthdayError}
         </div>
       )}
     </div>

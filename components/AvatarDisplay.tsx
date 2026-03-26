@@ -1,6 +1,6 @@
 'use client'
 
-import { parseAvatar, presetAvatarSrc } from '@/lib/avatars'
+import { parseAvatar, presetAvatarSrc, kidAvatarSrc } from '@/lib/avatars'
 import { getFrameStyle } from '@/lib/frames'
 
 interface AvatarDisplayProps {
@@ -33,7 +33,7 @@ export function AvatarDisplay({ avatar, size = 48, className = '', frame }: Avat
   ) : (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={parsed.type === 'preset' ? presetAvatarSrc(parsed.value) : parsed.value}
+      src={parsed.type === 'preset' ? presetAvatarSrc(parsed.value) : parsed.type === 'kid' ? kidAvatarSrc(parsed.value) : parsed.value}
       alt="Avatar"
       className={`rounded-full object-cover flex-shrink-0 bg-page ${frameClass} ${className}`}
       style={wrapperStyle}
