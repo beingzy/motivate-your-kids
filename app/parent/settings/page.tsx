@@ -82,7 +82,7 @@ export default function SettingsPage() {
     updateFamilyName,
     addCategory, removeCategory,
     requestProfileChange, approveProfileChange, denyProfileChange,
-    addFamilyMember, updateFamilyMember, removeFamilyMember,
+    updateFamilyMember, removeFamilyMember,
     createFamilyInvite, approveInvite, removeFamilyInvite,
     transferOwnership,
     approveJoinRequest, denyJoinRequest,
