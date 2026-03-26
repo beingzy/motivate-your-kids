@@ -6,6 +6,25 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.0] — 2026-03-26
+
+### Added
+- 36 animal avatars (axolotl to turtle) — new "🐾 Animals" tab in the avatar picker, now the default tab
+- `kid:` avatar prefix for animal avatars alongside existing `preset:` and emoji formats
+- Sign out confirmation modal with local-data reassurance
+- Category delete confirmation bottom sheet
+- Kid remove confirmation bottom sheet with avatar + star balance display
+- Auto-dismissing toast notifications for non-blocking errors (birthday rate limit, category in-use)
+
+### Changed
+- Data reset now requires typing `DELETE` to enable the destructive button
+- AvatarPicker defaults to Animals tab; three tabs: Animals, Emoji, Presets
+
+### Removed
+- All native `window.confirm()` and `window.alert()` calls replaced with in-app UI
+
+---
+
 ## [0.2.2] — 2026-03-26
 
 ### Added
