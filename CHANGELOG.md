@@ -6,6 +6,22 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.2] — 2026-03-26
+
+### Added
+- Invite page `/invite/[familyCode]/[relationship]` — public route for accepting invite links; pre-fills invitee name from `?name=` param; error states for expired/cross-device links
+- Clickable avatars in Settings: My Profile, kid cards, and member cards all show a pencil badge and open the avatar picker on tap
+- Avatar picker opens directly to the correct tab (Presets if current avatar is a preset)
+
+### Changed
+- Invite URLs now use path format `/invite/{familyCode}/{role}` instead of `?token=` query params
+- `/invite` added to middleware public routes (no auth required to view)
+
+### Fixed
+- Remove member in Settings now shows a proper in-app confirmation bottom sheet instead of `window.confirm()`
+
+---
+
 ## [0.2.1] — 2026-03-26
 
 ### Fixed
