@@ -32,6 +32,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# design assets (screenshots, mockups)
+/design
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
