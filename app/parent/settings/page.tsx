@@ -394,6 +394,8 @@ function MembersTab({
   const [copiedInviteId, setCopiedInviteId] = useState<string | null>(null)
   const [copiedCode, setCopiedCode] = useState(false)
 
+  const [memberToRemove, setMemberToRemove] = useState<FamilyMember | null>(null)
+
   const [showTransfer, setShowTransfer] = useState(false)
   const [transferTargetId, setTransferTargetId] = useState<string | null>(null)
   const [confirmTransfer, setConfirmTransfer] = useState(false)
@@ -421,20 +423,27 @@ function MembersTab({
   }
 
   function handleRemove(member: FamilyMember) {
-    if (member.isOwner) { alert('Cannot remove the family owner. Transfer ownership first.'); return }
-    if (confirm(`Remove ${member.name} from the family?`)) removeFamilyMember(member.id)
+    if (member.isOwner) return // owner cannot remove themselves
+    setMemberToRemove(member)
   }
 
-  function buildInviteUrl(token: string, name?: string) {
-    const url = new URL(`${window.location.origin}/invite`)
-    url.searchParams.set('token', token)
+  function confirmRemove() {
+    if (!memberToRemove) return
+    removeFamilyMember(memberToRemove.id)
+    setMemberToRemove(null)
+  }
+
+  function buildInviteUrl(role: FamilyRole, name?: string) {
+    const code = store.family?.displayCode || store.family?.uid || ''
+    const base = `${window.location.origin}/invite/${encodeURIComponent(code)}/${role}`
+    const url = new URL(base)
     if (name?.trim()) url.searchParams.set('name', name.trim())
     return url.toString()
   }
 
   function handleCreateInvite() {
     const invite = createFamilyInvite(inviteRole)
-    const url = buildInviteUrl(invite.token, inviteName)
+    const url = buildInviteUrl(invite.role, inviteName)
     navigator.clipboard.writeText(url).then(() => {
       setCopiedInviteId(invite.id)
       setTimeout(() => setCopiedInviteId(null), 3000)
@@ -444,7 +453,7 @@ function MembersTab({
   }
 
   function copyInviteLink(invite: FamilyInvite) {
-    const url = buildInviteUrl(invite.token)
+    const url = buildInviteUrl(invite.role)
     navigator.clipboard.writeText(url).then(() => {
       setCopiedInviteId(invite.id)
       setTimeout(() => setCopiedInviteId(null), 3000)
@@ -674,6 +683,29 @@ function MembersTab({
               Save Changes
             </button>
             <button onClick={() => setShowEditForm(false)} className="text-center text-ink-muted text-sm">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Remove member confirmation modal */}
+      {memberToRemove && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-end" onClick={() => setMemberToRemove(null)}>
+          <div className="bg-white w-full rounded-t-3xl p-6 flex flex-col gap-4 max-w-lg mx-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              <AvatarDisplay avatar={memberToRemove.avatar} size={48} />
+              <div>
+                <h2 className="text-lg font-bold text-ink-primary">Remove {memberToRemove.name}?</h2>
+                <p className="text-sm text-ink-secondary">{getRoleEmoji(memberToRemove.role)} {getRoleLabel(memberToRemove.role)}</p>
+              </div>
+            </div>
+            <p className="text-sm text-ink-secondary bg-red-50 rounded-xl px-4 py-3 text-red-700">
+              This will remove {memberToRemove.name} from the family. They won&apos;t be able to manage kids or log actions. This cannot be undone.
+            </p>
+            <button onClick={confirmRemove}
+              className="w-full py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold transition-colors">
+              Remove {memberToRemove.name}
+            </button>
+            <button onClick={() => setMemberToRemove(null)} className="text-center text-ink-muted text-sm">Cancel</button>
           </div>
         </div>
       )}

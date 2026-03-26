@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Routes that don't require auth
-  const publicPrefixes = ['/login', '/signup', '/auth/callback']
+  const publicPrefixes = ['/login', '/signup', '/auth/callback', '/invite']
   const isPublic =
     publicPrefixes.some(p => pathname.startsWith(p)) ||
     pathname.startsWith('/_next') ||

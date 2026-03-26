@@ -1717,14 +1717,15 @@ Settings tab: href changes from '/parent/more' to '/parent/settings'
   - **Technical Notes:** Move content from `app/parent/history/page.tsx`. Add filter state.
   - **Tests Required:** Type filtering, kid filtering, correct transaction count per filter
 
-- [ ] **FB-21e: URL-encoded invite links** — New invite link format and acceptance page
+- [x] **FB-21e: URL-encoded invite links** — New invite link format and acceptance page
   - **User:** Invited family members
   - **Acceptance Criteria:**
     - Invite links follow `{domain}/invite/{familyCode}/{relationship}` format
-    - Opening link pre-fills relationship role
-    - Invitee can sign up and join with pre-selected role
-  - **Technical Notes:** New route at `app/invite/[familyCode]/[relationship]/page.tsx`. Update `createFamilyInvite` to generate new URL format.
-  - **Tests Required:** Link generation, role pre-fill on invite page, join flow
+    - Opening link pre-fills relationship role and optional invitee name
+    - Invitee fills in name/avatar and clicks "Join" to become a family member
+    - Error shown if invite is expired, used, or not found on this device
+  - **Technical Notes:** New route at `app/invite/[familyCode]/[relationship]/page.tsx`. Public route (no auth required). Same-device only in localStorage mode; cross-device requires Supabase DB invite storage (v2). Updated `buildInviteUrl` in Settings to use path format.
+  - **Limitation (v1):** Invite links only work when opened on the same device as the family owner (localStorage constraint). Cross-device support will be added when invites are stored in Supabase (v2).
 
 - [x] **FB-21f: Navigation cleanup** — Update ParentNav, redirect old routes (partial: nav + /parent/more redirect done; /parent/family, /parent/badges, /parent/history still serve original pages)
   - **User:** All parents
@@ -1734,3 +1735,62 @@ Settings tab: href changes from '/parent/more' to '/parent/settings'
     - `/parent/family`, `/parent/badges`, `/parent/history` redirect to `/parent/settings` with correct tab
   - **Technical Notes:** Update `ParentNav.tsx`, add redirect pages.
   - **Tests Required:** Navigation links correct, redirects work
+
+- [ ] **FB-22: Remove member — in-app confirmation** — Replace `window.confirm()` with a proper bottom-sheet confirmation modal
+  - **User:** Family owner
+  - **Acceptance Criteria:**
+    - Clicking "Remove" on a member opens a confirmation sheet (not browser dialog)
+    - Sheet shows member name + avatar and a warning message
+    - Two buttons: "Remove [Name]" (destructive, red) and "Cancel"
+    - Only visible to family owner; owner cannot remove themselves
+  - **Technical Notes:** Add `memberToRemove: FamilyMember | null` state to `MembersTab`. Replace `handleRemove` call with state setter. Add confirmation modal JSX.
+  - **Tests Required:** Confirmation shown before removal, cancel works, non-owner cannot see remove button
+
+- [ ] **FB-23: Standalone sign-up → family choice** — After sign-up, users without a family see Create vs Join choice (already implemented in `/setup` page); document and verify the full flow
+  - **User:** New users
+  - **Acceptance Criteria:**
+    - Sign up → OTP verification → `/setup` choice screen (already works)
+    - "Create new family" leads to family name → kid → reward setup
+    - "Join existing family" leads to code entry → join request → owner approves
+    - Both paths fully functional end-to-end
+  - **Technical Notes:** `/setup/page.tsx` already implements this. Verify the join-by-code path correctly creates a `JoinRequest` visible to the owner in Settings > Members.
+  - **Tests Required:** Full sign-up → create flow, full sign-up → join flow
+
+---
+
+### Round 13 — Family Membership Flows (Mar 2026)
+
+**Motivation:** Clarify and implement the three distinct ways to join or manage a family:
+1. Family owner removes a member (with proper UX confirmation)
+2. New users join via an invite link created by the owner
+3. New users sign up independently and join later via family code
+
+---
+
+#### FB-22 · Remove Member — In-app Confirmation
+
+**Problem:** The current remove-member action uses `window.confirm()` — a browser-native dialog that breaks the app's design system and behaves inconsistently across mobile browsers.
+
+**Requirements:**
+- Add `memberToRemove: FamilyMember | null` state to the Members tab
+- Clicking "Remove" sets `memberToRemove` instead of calling `window.confirm()`
+- A bottom-sheet modal appears with: member avatar + name, warning text, red "Remove" button, "Cancel" button
+- Only the family owner sees the Remove button; the owner cannot remove themselves
+- After removal, `memberToRemove` is cleared and the sheet closes
+
+---
+
+#### FB-23 · Invite Page — `/invite/[familyCode]/[relationship]`
+
+**Requirements:**
+- Public route (no Supabase auth required to view)
+- URL format: `{domain}/invite/{familyCode}/{role}?name={pre-filled name}`
+- Page reads family from localStorage by matching `familyCode` against `store.family.displayCode` or `store.family.uid`
+- Finds the first non-expired `approved` invite for the given role
+- Shows: family name, role badge, name input (pre-filled from `?name=`), avatar picker
+- "Join Family" button → calls `addFamilyMember()` → redirects to `/parent`
+- Error states: family not found on this device, no active invite for this role, invite expired
+
+**Limitation (localStorage v1):** The invite link only works on the same device as the family owner because invite tokens are stored in localStorage. Cross-device support requires Supabase invite storage (v2 — `validate_invite()` and `accept_invite()` functions are already provisioned in the database).
+
+**UX for cross-device attempts:** If the family is not found in localStorage, show a friendly message explaining the limitation and offering to sign up independently instead.
