@@ -1794,3 +1794,47 @@ Settings tab: href changes from '/parent/more' to '/parent/settings'
 **Limitation (localStorage v1):** The invite link only works on the same device as the family owner because invite tokens are stored in localStorage. Cross-device support requires Supabase invite storage (v2 — `validate_invite()` and `accept_invite()` functions are already provisioned in the database).
 
 **UX for cross-device attempts:** If the family is not found in localStorage, show a friendly message explaining the limitation and offering to sign up independently instead.
+
+---
+
+### Round 14 — Custom Avatars & Confirmation Dialogs (Mar 2026)
+
+---
+
+#### FB-24 · Custom Kid Avatars — Animal Presets
+
+**Problem:** The existing avatar options are limited to 20 emoji avatars and 30 Figma-designed presets. Neither set has playful, kid-friendly animal illustrations. The project already has 36 high-quality animal PNG avatars in `app/assets/kid-avatars/` that are not exposed to users.
+
+**Solution:**
+- Move 36 animal avatar PNGs from `app/assets/kid-avatars/` to `public/avatars/kids/` for web serving
+- Extend `AvatarType` to include `'kid'` alongside `'emoji' | 'preset' | 'url'`
+- New avatar prefix: `kid:axolotl`, `kid:bear`, etc. (same pattern as `preset:avatar-01`)
+- Add `KID_AVATARS` constant (36 entries) and `kidAvatarSrc(name)` function to `lib/avatars.ts`
+- `AvatarPicker` gains a third tab: **🐾 Animals** (default tab) alongside Emoji and Presets
+- `AvatarDisplay` updated to render `kid:` prefix avatars via `kidAvatarSrc()`
+
+**Available animals (36):** axolotl, bat, bear, bee, bluebird, bunny, cat, chick, chicken, cow, dinosaur, dog, duck, elephant, fox, frog, giraffe, goldfish, hamster, hedgehog, jellyfish, kitten, koala, octopus, otter, panda, penguin, pig, seal, sheep, sloth, snail, sprout-snail, squirrel, toad, turtle
+
+---
+
+#### FB-25 · Comprehensive Confirmation Dialogs
+
+**Problem:** Multiple destructive actions across the app use `window.confirm()` or `window.alert()` or have no confirmation at all. These native browser dialogs break the app's design system, behave inconsistently on mobile, and provide a jarring UX.
+
+**Solution — replace every native dialog with in-app bottom-sheet modals:**
+
+| Action | Before | After |
+|--------|--------|-------|
+| Remove family member | `window.confirm()` | ✅ Already fixed (FB-22) |
+| Remove kid | `window.confirm()` | Bottom sheet: kid avatar + name + star balance, warning about profile removal |
+| Remove category | `window.confirm()` + `window.alert()` for in-use | Bottom sheet confirmation; in-use error shown as toast notification |
+| Sign out | No confirmation | Bottom sheet: "Sign out?" with reassurance that local data persists |
+| Data reset | Simple two-button flow | **Typed confirmation**: user must type `DELETE` to enable the destructive button |
+| Birthday edit once-per-year | `window.alert()` | Toast notification (auto-dismiss after 4s) |
+
+**Design principles:**
+- All confirmations use the consistent bottom-sheet modal pattern (rounded-t-3xl, bg-black/40 overlay)
+- Destructive buttons are red (`bg-red-500`) with explicit action text ("Remove [Name]", not "OK")
+- Account deletion and data reset require **typed confirmation** (`DELETE`) to prevent accidental triggers
+- Non-blocking errors (birthday rate limit, category in-use) shown as toast notifications that auto-dismiss
+- Cancel option is always available and easy to reach
