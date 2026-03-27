@@ -120,16 +120,14 @@ function collectAllDefs(content, fullDefs) {
   return needed
 }
 
-// Name avatars sequentially
-const names = []
-for (let r = 0; r < rows.length; r++) {
-  for (let c = 0; c < cols.length; c++) {
-    const idx = r * cols.length + c
-    if (idx < avatarGroups.length) {
-      names.push(`avatar-${String(idx + 1).padStart(2, '0')}`)
-    }
-  }
-}
+// Named avatars matching the grid layout (6 cols x 5 rows)
+const names = [
+  'frog', 'pig', 'fox', 'penguin', 'shiba', 'bunny',
+  'bear', 'calico-cat', 'elephant', 'gray-cat', 'polar-bear', 'hamster',
+  'panda', 'duck', 'horse', 'pigeon', 'parrot', 'cow',
+  'red-panda', 'koala', 'rabbit', 'beaver', 'sheep', 'deer',
+  'tiger', 'lion', 'sloth', 'hippo', 'turtle', 'polar-bear-cub',
+]
 
 // Remove old placeholder SVGs
 const oldFiles = readdirSync(outDir).filter(f => f.endsWith('.svg') && f !== 'full-set.svg')

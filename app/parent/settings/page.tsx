@@ -292,7 +292,7 @@ export default function SettingsPage() {
                 setSoundEnabled(next)
                 saveMeta({ soundEnabled: next })
               }}
-              className={`w-12 h-7 rounded-full transition-colors relative ${
+              className={`w-12 h-7 rounded-full transition-colors relative outline-none focus:ring-2 focus:ring-brand/30 ${
                 soundEnabled ? 'bg-brand' : 'bg-gray-300'
               }`}
             >
