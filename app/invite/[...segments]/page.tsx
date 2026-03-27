@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use, Suspense } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -32,19 +32,16 @@ type InviteStatus =
   | { type: 'already_used' }
 
 function InvitePage({ params, searchParams }: {
-  params: Promise<{ segments: string[] }>
-  searchParams: Promise<{ name?: string }>
+  params: { segments: string[] }
+  searchParams: { name?: string }
 }) {
   const router = useRouter()
-  const resolvedParams = use(params)
-  const resolvedSearch = use(searchParams)
 
   // Support both new (/invite/<token>) and old (/invite/<code>/<role>) URL formats
   // For old format, the first segment is a short code — treat it as an invalid token
   // which will resolve to "not_found" via the RPC
-  const segments = resolvedParams.segments
-  const token = segments[0]
-  const prefillName = resolvedSearch.name ?? ''
+  const token = params.segments[0]
+  const prefillName = searchParams.name ?? ''
 
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>({ type: 'loading' })
   const [name, setName] = useState(prefillName)
@@ -293,12 +290,8 @@ function InvitePage({ params, searchParams }: {
 }
 
 export default function InvitePageWrapper({ params, searchParams }: {
-  params: Promise<{ segments: string[] }>
-  searchParams: Promise<{ name?: string }>
+  params: { segments: string[] }
+  searchParams: { name?: string }
 }) {
-  return (
-    <Suspense>
-      <InvitePage params={params} searchParams={searchParams} />
-    </Suspense>
-  )
+  return <InvitePage params={params} searchParams={searchParams} />
 }
