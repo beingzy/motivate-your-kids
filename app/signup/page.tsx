@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
-export default function SignupPage() {
+export default function SignupPage({ searchParams }: { searchParams: { redirect?: string } }) {
   const router = useRouter()
+  const redirectTo = searchParams.redirect ?? ''
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -58,7 +59,9 @@ export default function SignupPage() {
     }
 
     console.log('[auth]', JSON.stringify({ event: 'signup_success' }))
-    router.push(`/signup/verify?email=${encodeURIComponent(email)}`)
+    const verifyParams = new URLSearchParams({ email })
+    if (redirectTo) verifyParams.set('redirect', redirectTo)
+    router.push(`/signup/verify?${verifyParams.toString()}`)
   }
 
   return (
@@ -147,7 +150,7 @@ export default function SignupPage() {
 
         <p className="text-center text-ink-secondary text-sm mt-6">
           Already have an account?{' '}
-          <Link href="/login" className="text-brand font-bold hover:underline">
+          <Link href={redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : '/login'} className="text-brand font-bold hover:underline">
             Sign in
           </Link>
         </p>

@@ -30,6 +30,7 @@ type InviteStatus =
   | { type: 'not_found' }
   | { type: 'expired' }
   | { type: 'already_used' }
+  | { type: 'already_member'; familyName: string }
 
 function InvitePage({ params, searchParams }: {
   params: { segments: string[] }
@@ -38,12 +39,12 @@ function InvitePage({ params, searchParams }: {
   const router = useRouter()
 
   // Support both new (/invite/<token>) and old (/invite/<code>/<role>) URL formats
-  // For old format, the first segment is a short code — treat it as an invalid token
-  // which will resolve to "not_found" via the RPC
   const token = params.segments[0]
   const prefillName = searchParams.name ?? ''
 
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>({ type: 'loading' })
+  const [authUserId, setAuthUserId] = useState<string | null>(null)
+  const [authChecked, setAuthChecked] = useState(false)
   const [name, setName] = useState(prefillName)
   const [avatar, setAvatar] = useState('👩')
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
@@ -52,15 +53,24 @@ function InvitePage({ params, searchParams }: {
   const [joined, setJoined] = useState(false)
   const [joining, setJoining] = useState(false)
 
-  // Validate invite via Supabase RPC (token-based, no auth needed)
+  // Check auth status + validate invite in parallel
   useEffect(() => {
     const supabase = createClient()
 
-    async function validate() {
-      const { data, error } = await supabase.rpc('validate_invite_by_token', {
-        p_token: token,
-      })
+    async function init() {
+      // Check auth in parallel with invite validation
+      const [authResult, validateResult] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.rpc('validate_invite_by_token', { p_token: token }),
+      ])
 
+      // Auth
+      const user = authResult.data?.user
+      setAuthUserId(user?.id ?? null)
+      setAuthChecked(true)
+
+      // Invite validation
+      const { data, error } = validateResult
       if (error || !data) {
         setInviteStatus({ type: 'not_found' })
         return
@@ -83,7 +93,7 @@ function InvitePage({ params, searchParams }: {
       }
     }
 
-    validate()
+    init()
   }, [token])
 
   // Pre-fill name from URL param once
@@ -94,6 +104,14 @@ function InvitePage({ params, searchParams }: {
 
   async function handleJoin() {
     if (!name.trim() || !selectedRole || joining) return
+
+    // If not logged in, redirect to signup with return URL
+    if (!authUserId) {
+      const returnUrl = `/invite/${token}`
+      router.push(`/signup?redirect=${encodeURIComponent(returnUrl)}`)
+      return
+    }
+
     setJoining(true)
 
     try {
@@ -105,12 +123,15 @@ function InvitePage({ params, searchParams }: {
         p_avatar: avatar,
         p_role: selectedRole,
         p_birthday: birthday || null,
+        p_user_id: authUserId,
       })
 
       if (error || !data || data.error) {
         const errType = data?.error
         if (errType === 'expired') {
           setInviteStatus({ type: 'expired' })
+        } else if (errType === 'already_member') {
+          setInviteStatus({ type: 'already_member', familyName: data?.familyName ?? '' })
         } else {
           setInviteStatus({ type: 'not_found' })
         }
@@ -147,6 +168,25 @@ function InvitePage({ params, searchParams }: {
     )
   }
 
+  // ── Already a member ────────────────────────────────────────────────────────
+  if (inviteStatus.type === 'already_member') {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center px-5 py-10 gap-6">
+        <div className="text-6xl">👨‍👩‍👧</div>
+        <div className="text-center">
+          <h1 className="text-2xl font-extrabold text-ink-primary mb-2">Already a member!</h1>
+          <p className="text-ink-secondary text-sm leading-relaxed max-w-xs">
+            You&apos;re already part of {inviteStatus.familyName}.
+          </p>
+        </div>
+        <Link href="/parent"
+          className="w-full max-w-xs py-3 rounded-2xl bg-brand text-white font-bold text-center text-sm hover:bg-brand-hover transition-colors">
+          Go to dashboard
+        </Link>
+      </main>
+    )
+  }
+
   // ── Error states ───────────────────────────────────────────────────────────
   if (inviteStatus.type === 'not_found' || inviteStatus.type === 'expired' || inviteStatus.type === 'already_used') {
     const messages = {
@@ -167,7 +207,7 @@ function InvitePage({ params, searchParams }: {
           <p className="text-xs text-ink-muted text-center">Don&apos;t have an account yet?</p>
           <Link href="/signup"
             className="w-full py-3 rounded-2xl bg-brand text-white font-bold text-center text-sm hover:bg-brand-hover transition-colors">
-            Sign up independently →
+            Sign up independently
           </Link>
           <Link href="/login"
             className="w-full py-3 rounded-2xl bg-white border-2 border-line text-ink-primary font-bold text-center text-sm hover:bg-page transition-colors">
@@ -196,6 +236,16 @@ function InvitePage({ params, searchParams }: {
             </div>
           )}
         </div>
+
+        {/* Auth notice */}
+        {authChecked && !authUserId && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
+            <p className="text-amber-800 text-xs">
+              You&apos;ll need to sign up or log in before joining.
+              Fill in your details below, then you&apos;ll be redirected to create an account.
+            </p>
+          </div>
+        )}
 
         {/* Form */}
         <div className="bg-white rounded-[20px] shadow-card p-5 flex flex-col gap-5">
@@ -274,7 +324,7 @@ function InvitePage({ params, searchParams }: {
             disabled={!name.trim() || !selectedRole || joining}
             className="w-full h-12 rounded-[14px] bg-brand hover:bg-brand-hover disabled:opacity-50 text-white font-extrabold text-[15px] shadow-brand transition-colors"
           >
-            {joining ? 'Joining…' : `Join ${inviteStatus.familyName} →`}
+            {joining ? 'Joining…' : authUserId ? `Join ${inviteStatus.familyName}` : `Sign up & Join`}
           </button>
         </div>
 

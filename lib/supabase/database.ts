@@ -54,11 +54,23 @@ export async function fetchFamilyData(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<AppStore> {
-  // Get the family for this user
+  // Look up the user's family via family_members.user_id (works for owners AND invited members)
+  const { data: memberRows } = await supabase
+    .from('family_members')
+    .select('family_id')
+    .eq('user_id', userId)
+    .limit(1)
+
+  if (!memberRows || memberRows.length === 0) {
+    return DEFAULT_STORE
+  }
+
+  const familyId = memberRows[0].family_id as string
+
   const { data: familyRows } = await supabase
     .from('families')
     .select('*')
-    .eq('user_id', userId)
+    .eq('id', familyId)
     .limit(1)
 
   if (!familyRows || familyRows.length === 0) {
@@ -66,7 +78,6 @@ export async function fetchFamilyData(
   }
 
   const familyRow = familyRows[0]
-  const familyId = familyRow.id as string
   const family = rowToCamel<Family & { userId?: string }>(familyRow)
   // Strip the DB-only userId field from the Family type
   delete family.userId
@@ -243,8 +254,10 @@ export async function insertKidBadge(supabase: SupabaseClient, kb: KidBadge) {
 }
 
 // Family members
-export async function insertFamilyMember(supabase: SupabaseClient, member: FamilyMember) {
-  const { error } = await supabase.from('family_members').insert(rowToSnake(member as unknown as RowMap))
+export async function insertFamilyMember(supabase: SupabaseClient, member: FamilyMember, authUserId?: string) {
+  const row = rowToSnake(member as unknown as RowMap)
+  if (authUserId) row.user_id = authUserId
+  const { error } = await supabase.from('family_members').insert(row)
   if (error) throw error
 }
 

@@ -1736,6 +1736,28 @@ Settings tab: href changes from '/parent/more' to '/parent/settings'
   - **Technical Notes:** Update `ParentNav.tsx`, add redirect pages.
   - **Tests Required:** Navigation links correct, redirects work
 
+- [ ] **FB-26: Fix invite flow — auth-gated join + member↔user linking** — Invited users end up creating a new family instead of joining the existing one
+  - **User:** Invited family members (e.g. spouse clicking invite link)
+  - **Bug:** Invite accept is unauthenticated; member record created without auth link; after signup, `fetchFamilyData` can't find the family → user sees setup page → creates new family
+  - **Root Causes:**
+    1. `family_members` table has no `user_id` column — members can't be linked to auth accounts
+    2. Invite page completes join without requiring login — no auth user to link
+    3. `fetchFamilyData` only queries `families.user_id` (owner), never `family_members`
+  - **Solution (4 parts):**
+    1. **DB migration:** Add `user_id UUID REFERENCES auth.users(id)` to `family_members`; backfill owner's `user_id` from `families.user_id`; add index on `family_members(user_id)`
+    2. **Invite page flow change:** Show invite details publicly (validate token) → clicking "Join" checks auth → if not logged in, redirect to `/signup?redirect=/invite/{token}` → after auth, redirect back → now authenticated, complete the join with `auth.uid()` linked to the new member record
+    3. **`fetchFamilyData` rewrite:** Query `family_members WHERE user_id = auth.uid()` first to get `family_id`, then load the family and all child data by that `family_id` (instead of `families.user_id`)
+    4. **`accept_invite_by_token` RPC update:** Require auth; accept `p_user_id UUID` parameter; store it in `family_members.user_id`; reject if user already belongs to a family
+  - **Acceptance Criteria:**
+    - Invited user clicks link → sees family name + role → clicks Join → redirected to signup/login → returns to invite → joins the EXISTING family
+    - After join, `/parent` loads the correct family data
+    - Owner's existing session continues to work (backfilled `user_id`)
+    - Duplicate join attempts show "already a member" error
+  - **Technical Notes:**
+    - Files: `supabase/migrations/003_member_user_id.sql`, `lib/supabase/database.ts`, `app/invite/[...segments]/page.tsx`, `context/FamilyContext.tsx`, `middleware.ts` (add `/invite` redirect support), `app/signup/page.tsx` + `app/login/page.tsx` (handle `?redirect=`)
+    - Must also clean up wife's orphan family V5Z-ESH and link her auth user to the "fei" member in MJL-PU3
+  - **Tests Required:** Full invite→signup→join flow, existing user invite flow, duplicate join rejection, fetchFamilyData for owner vs member
+
 - [ ] **FB-22: Remove member — in-app confirmation** — Replace `window.confirm()` with a proper bottom-sheet confirmation modal
   - **User:** Family owner
   - **Acceptance Criteria:**

@@ -60,10 +60,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Authenticated users don't need the auth pages
+  // Authenticated users don't need the auth pages — redirect to intended destination
   if (user && (pathname === '/login' || pathname === '/signup')) {
     const url = request.nextUrl.clone()
-    url.pathname = '/'
+    url.pathname = request.nextUrl.searchParams.get('redirect') || '/'
+    url.search = ''
     return NextResponse.redirect(url)
   }
 

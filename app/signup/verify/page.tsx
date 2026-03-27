@@ -9,6 +9,7 @@ function VerifyForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get('email') ?? ''
+  const redirectTo = searchParams.get('redirect') ?? ''
 
   const [code, setCode] = useState('')
   const [showCodeInput, setShowCodeInput] = useState(false)
@@ -28,7 +29,7 @@ function VerifyForm() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
         console.log('[auth]', JSON.stringify({ event: 'verify_success', detail: 'via email link' }))
-        router.replace('/')
+        router.replace(redirectTo || '/')
       }
     })
     return () => subscription.unsubscribe()
@@ -66,7 +67,7 @@ function VerifyForm() {
     }
 
     console.log('[auth]', JSON.stringify({ event: 'verify_success', detail: 'otp' }))
-    router.replace('/')
+    router.replace(redirectTo || '/')
   }
 
   async function handleResend() {

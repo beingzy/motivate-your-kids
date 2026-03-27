@@ -136,7 +136,7 @@ function LoginForm() {
 
         <p className="text-center text-ink-secondary text-sm mt-6">
           New here?{' '}
-          <Link href="/signup" className="text-brand font-bold hover:underline">
+          <Link href={redirectTo !== '/' ? `/signup?redirect=${encodeURIComponent(redirectTo)}` : '/signup'} className="text-brand font-bold hover:underline">
             Create an account
           </Link>
         </p>

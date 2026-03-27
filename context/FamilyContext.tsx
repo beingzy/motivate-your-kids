@@ -501,7 +501,7 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
         await insertFamily(supabase, family, userId)
         await Promise.all(categories.map(c => insertCategory(supabase, c)))
         await Promise.all(actions.map(a => insertAction(supabase, a)))
-        await insertFamilyMember(supabase, owner)
+        await insertFamilyMember(supabase, owner, userId)
       })
     }
   }, [supabase, userId, persist])
