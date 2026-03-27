@@ -32,14 +32,18 @@ type InviteStatus =
   | { type: 'already_used' }
 
 function InvitePage({ params, searchParams }: {
-  params: Promise<{ token: string }>
+  params: Promise<{ segments: string[] }>
   searchParams: Promise<{ name?: string }>
 }) {
   const router = useRouter()
   const resolvedParams = use(params)
   const resolvedSearch = use(searchParams)
 
-  const token = resolvedParams.token
+  // Support both new (/invite/<token>) and old (/invite/<code>/<role>) URL formats
+  // For old format, the first segment is a short code — treat it as an invalid token
+  // which will resolve to "not_found" via the RPC
+  const segments = resolvedParams.segments
+  const token = segments[0]
   const prefillName = resolvedSearch.name ?? ''
 
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>({ type: 'loading' })
@@ -289,7 +293,7 @@ function InvitePage({ params, searchParams }: {
 }
 
 export default function InvitePageWrapper({ params, searchParams }: {
-  params: Promise<{ token: string }>
+  params: Promise<{ segments: string[] }>
   searchParams: Promise<{ name?: string }>
 }) {
   return (
