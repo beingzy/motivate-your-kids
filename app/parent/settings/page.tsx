@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import type React from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useFamily } from '@/context/FamilyContext'
 import { useLocale } from '@/context/LocaleContext'
 import { createClient } from '@/lib/supabase/client'
@@ -1436,6 +1438,37 @@ const TYPE_FILTERS: { label: string; value: TransactionType | 'all' }[] = [
 const STATUS_LABEL: Record<string, string> = { approved: '✓', pending: '⏳', denied: '✕' }
 const STATUS_COLOR: Record<string, string> = { approved: 'text-green-500', pending: 'text-ink-muted', denied: 'text-red-400' }
 
+function SettingsInlinePlayButton({ voiceMemoUrl }: { voiceMemoUrl: string }) {
+  const [playing, setPlaying] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  function handleClick(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (playing && audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+      setPlaying(false)
+      return
+    }
+    const audio = new Audio(voiceMemoUrl)
+    audioRef.current = audio
+    audio.onended = () => setPlaying(false)
+    audio.play()
+    setPlaying(true)
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-50 text-green-700 text-xs font-bold border-2 border-green-200 hover:bg-green-100 transition-colors"
+    >
+      {playing ? '⏸ Pause' : '▶️ Play Voice Memo'}
+    </button>
+  )
+}
+
 function HistoryTab({ store }: { store: ReturnType<typeof useFamily>['store'] }) {
   const [typeFilter, setTypeFilter] = useState<TransactionType | 'all'>('all')
   const [kidFilter, setKidFilter] = useState<string>('all')
@@ -1500,17 +1533,21 @@ function HistoryTab({ store }: { store: ReturnType<typeof useFamily>['store'] })
             const isEarn = tx.type === 'earn'
             const isExpanded = expandedTxId === tx.id
 
+            const hasMedia = !!(tx.photoUrl || tx.voiceMemoUrl)
+
             return (
-              <div key={tx.id}
-                className={`px-4 py-3 cursor-pointer hover:bg-page/50 transition-colors ${i < filteredTxs.length - 1 ? 'border-b border-line-subtle' : ''}`}
-                onClick={() => setExpandedTxId(isExpanded ? null : tx.id)}>
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl w-8 text-center">{kid?.avatar ?? '👦'}</span>
+              <div key={tx.id} className={`${i < filteredTxs.length - 1 ? 'border-b border-line-subtle' : ''}`}>
+                {/* Row — tapping opens detail page */}
+                <Link
+                  href={`/parent/history/${tx.id}`}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-page/50 active:bg-page/70 transition-colors"
+                >
+                  <AvatarDisplay avatar={kid?.avatar ?? '👦'} size={32} frame={kid?.avatarFrame} />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-ink-primary text-sm truncate">
                       <span className="text-brand">{kid?.name ?? '?'}</span>{' · '}{label}
-                      {tx.photoUrl && <span className="ml-1">📷</span>}
-                      {tx.voiceMemoUrl && <span className="ml-1">🎙</span>}
+                      {tx.photoUrl && <span className="ml-1 text-xs opacity-60">📷</span>}
+                      {tx.voiceMemoUrl && <span className="ml-1 text-xs opacity-60">🎤</span>}
                     </p>
                     <p className="text-ink-muted text-xs">{formatTime(tx.timestamp)}</p>
                   </div>
@@ -1521,15 +1558,32 @@ function HistoryTab({ store }: { store: ReturnType<typeof useFamily>['store'] })
                     {tx.type === 'redeem' && (
                       <span className={`text-xs font-bold ${STATUS_COLOR[tx.status]}`}>{STATUS_LABEL[tx.status]}</span>
                     )}
+                    {hasMedia && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpandedTxId(isExpanded ? null : tx.id) }}
+                        className="text-[10px] text-ink-muted hover:text-brand transition-colors mt-0.5"
+                      >
+                        {isExpanded ? '▲ hide' : '▼ show'}
+                      </button>
+                    )}
                   </div>
-                </div>
+                </Link>
 
-                {/* Expanded details */}
-                {isExpanded && (
-                  <div className="mt-2 ml-11 text-xs text-ink-secondary flex flex-col gap-1">
-                    {tx.reason && <p>Reason: {tx.reason}</p>}
-                    {tx.note && <p>Note: {tx.note}</p>}
-                    <p className="text-ink-muted">{new Date(tx.timestamp).toLocaleString()}</p>
+                {/* Expanded media preview */}
+                {isExpanded && hasMedia && (
+                  <div className="px-4 pb-3 ml-11 flex flex-col gap-2">
+                    {tx.photoUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={tx.photoUrl}
+                        alt="Attached photo"
+                        className="rounded-xl w-full max-h-48 object-contain bg-page"
+                      />
+                    )}
+                    {tx.voiceMemoUrl && (
+                      <SettingsInlinePlayButton voiceMemoUrl={tx.voiceMemoUrl} />
+                    )}
                   </div>
                 )}
               </div>

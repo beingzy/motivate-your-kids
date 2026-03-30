@@ -1,8 +1,41 @@
 'use client'
 
+import { useState, useRef } from 'react'
 import { useFamily } from '@/context/FamilyContext'
 import { AvatarDisplay } from '@/components/AvatarDisplay'
 import Link from 'next/link'
+
+function InlinePlayButton({ voiceMemoUrl }: { voiceMemoUrl: string }) {
+  const [playing, setPlaying] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  function handleClick(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (playing && audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+      setPlaying(false)
+      return
+    }
+    const audio = new Audio(voiceMemoUrl)
+    audioRef.current = audio
+    audio.onended = () => setPlaying(false)
+    audio.play()
+    setPlaying(true)
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className="text-xs ml-0.5 opacity-60 hover:opacity-100 transition-opacity inline-flex items-center"
+      aria-label={playing ? 'Pause voice memo' : 'Play voice memo'}
+    >
+      {playing ? '⏸' : '▶️🎤'}
+    </button>
+  )
+}
 
 function formatTime(ts: string): string {
   const d = new Date(ts)
@@ -84,8 +117,8 @@ export default function HistoryPage() {
                   </p>
                   <div className="flex items-center gap-1.5">
                     <span className="text-ink-muted text-xs">{formatTime(tx.timestamp)}</span>
-                    {hasPhoto && <span className="text-xs" title="Has photo">📷</span>}
-                    {hasVoice && <span className="text-xs" title="Has voice memo">🎤</span>}
+                    {hasPhoto && <span className="text-xs opacity-60">📷</span>}
+                    {hasVoice && <InlinePlayButton voiceMemoUrl={tx.voiceMemoUrl!} />}
                   </div>
                 </Link>
                 <div className="flex flex-col items-end gap-0.5">

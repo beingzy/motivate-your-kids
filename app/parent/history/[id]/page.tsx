@@ -11,6 +11,7 @@ export default function TransactionDetailPage() {
   const router = useRouter()
   const { store } = useFamily()
   const [playing, setPlaying] = useState(false)
+  const [lightbox, setLightbox] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const tx = store.transactions.find(t => t.id === id)
@@ -138,8 +139,32 @@ export default function TransactionDetailPage() {
             <img
               src={tx.photoUrl}
               alt="Attached photo"
-              className="rounded-xl w-full max-h-64 object-cover"
+              onClick={() => setLightbox(true)}
+              className="rounded-xl w-full max-h-64 object-cover cursor-zoom-in"
             />
+            <p className="text-ink-muted text-[10px] mt-1 text-center">Tap to expand</p>
+          </div>
+        )}
+
+        {/* Photo lightbox */}
+        {lightbox && tx.photoUrl && (
+          <div
+            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setLightbox(false)}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={tx.photoUrl}
+              alt="Attached photo"
+              className="max-w-full max-h-full rounded-xl object-contain"
+            />
+            <button
+              type="button"
+              className="absolute top-4 right-4 text-white text-2xl font-bold leading-none"
+              onClick={() => setLightbox(false)}
+            >
+              ✕
+            </button>
           </div>
         )}
 
