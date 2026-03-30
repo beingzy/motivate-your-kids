@@ -1,6 +1,7 @@
 'use client'
 
 import { useFamily } from '@/context/FamilyContext'
+import { AvatarDisplay } from '@/components/AvatarDisplay'
 import Link from 'next/link'
 
 function formatTime(ts: string): string {
@@ -72,7 +73,7 @@ export default function HistoryPage() {
                 key={tx.id}
                 className={`flex items-center gap-3 px-4 py-3 ${i < allTxs.length - 1 ? 'border-b border-line-subtle' : ''} ${isCancelled ? 'opacity-50' : ''}`}
               >
-                <span className="text-2xl w-8 text-center">{kid?.avatar ?? '👦'}</span>
+                <AvatarDisplay avatar={kid?.avatar ?? '👦'} size={32} frame={kid?.avatarFrame} />
                 <Link href={`/parent/history/${tx.id}`} className="flex-1 min-w-0">
                   <p className="font-medium text-ink-primary text-sm truncate">
                     <span className="text-brand">{kid?.name ?? '?'}</span>

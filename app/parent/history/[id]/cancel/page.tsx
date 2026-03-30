@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { useFamily } from '@/context/FamilyContext'
+import { AvatarDisplay } from '@/components/AvatarDisplay'
 
 function AnimatedNumber({ from, to }: { from: number; to: number }) {
   const [current, setCurrent] = useState(from)
@@ -151,7 +152,7 @@ export default function CancelConfirmPage() {
         <div className="px-5 py-4 border-b border-line-subtle">
           <p className="text-ink-muted text-xs font-bold uppercase mb-2">Original Action</p>
           <div className="flex items-center gap-3">
-            <span className="text-2xl">{kid?.avatar ?? '👦'}</span>
+            <AvatarDisplay avatar={kid?.avatar ?? '👦'} size={32} frame={kid?.avatarFrame} />
             <div className="flex-1 min-w-0">
               <p className="font-bold text-ink-primary text-sm">{label}</p>
               <p className="text-brand text-xs">{kid?.name ?? 'Unknown'}</p>

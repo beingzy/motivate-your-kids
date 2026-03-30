@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import { useFamily } from '@/context/FamilyContext'
+import { AvatarDisplay } from '@/components/AvatarDisplay'
 import Link from 'next/link'
 
 export default function TransactionDetailPage() {
@@ -79,7 +80,7 @@ export default function TransactionDetailPage() {
       <div className="bg-white rounded-2xl shadow-card overflow-hidden">
         {/* Header */}
         <div className={`px-5 py-4 flex items-center gap-3 ${isCancelled ? 'opacity-50' : ''}`}>
-          <span className="text-3xl">{kid?.avatar ?? '👦'}</span>
+          <AvatarDisplay avatar={kid?.avatar ?? '👦'} size={40} frame={kid?.avatarFrame} />
           <div className="flex-1 min-w-0">
             <p className="font-bold text-ink-primary text-lg">
               {isCancelEntry && <span className="text-ink-muted">↩ </span>}
