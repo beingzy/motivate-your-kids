@@ -20,11 +20,29 @@
 
 ### Workflow for Every Change
 
+#### Phase 1: Analyze & Design (before writing any code)
+
+When receiving a feature request or bug report:
+
+1. **Deeply analyze the request** — don't take it at face value. Ask:
+   - What is the user actually trying to accomplish?
+   - What surfaces/pages are affected?
+   - What existing code and patterns are involved?
+   - What edge cases, failure modes, or UX pitfalls exist?
+   - How does this interact with the rest of the system?
+2. **Audit the live state** — read the current code for all affected surfaces. Identify gaps between what exists and what the ideal UX should be.
+3. **Design the solution thoroughly** — define the exact changes needed per file, the user flow, and any data/type changes.
+4. **Update `prd.md`** — add a structured Build Queue entry with acceptance criteria, technical notes, and test cases. Show the user and confirm before building.
+
+#### Phase 2: Build (one feature at a time)
+
 1. Branch off `main`: `git checkout -b feat/<name> main`
-2. Implement the change following the one-feature-at-a-time rule (see `~/CLAUDE.md`)
-3. Run lint + type-check + tests — all must pass
+2. Implement **one feature only** following the one-feature-at-a-time rule (see `~/CLAUDE.md`)
+3. Run lint + type-check + build — all must pass
 4. Open a PR targeting `main`
 5. Squash-merge the PR; delete the feature branch after merge
+6. **Verify the feature works** before moving to the next one
+7. Only then start the next feature — never batch multiple features into one PR
 
 ---
 
